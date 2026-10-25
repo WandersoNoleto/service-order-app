@@ -1,6 +1,8 @@
 # Miscellaneous
 *.class
 *.lock
+# Apps commit the lock file so every build uses the same package versions.
+!pubspec.lock
 *.log
 *.pyc
 *.swp
