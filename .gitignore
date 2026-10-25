@@ -124,3 +124,7 @@ clients/private/
 *.jks
 *.keystore
 key.properties
+
+# IDE
+.idea/
+*.iml
