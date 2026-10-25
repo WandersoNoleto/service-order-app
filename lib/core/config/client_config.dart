@@ -10,6 +10,10 @@ class ClientConfig {
     required this.companyName,
     required this.companyDocument,
     required this.companyPhone,
+    required this.companyAddress,
+    required this.companyCity,
+    required this.companyState,
+    required this.companyResponsible,
     required this.brandColor,
     required this.logoAsset,
   });
@@ -25,6 +29,10 @@ class ClientConfig {
       companyName: const String.fromEnvironment('COMPANY_NAME'),
       companyDocument: const String.fromEnvironment('COMPANY_DOCUMENT'),
       companyPhone: const String.fromEnvironment('COMPANY_PHONE'),
+      companyAddress: const String.fromEnvironment('COMPANY_ADDRESS'),
+      companyCity: const String.fromEnvironment('COMPANY_CITY'),
+      companyState: const String.fromEnvironment('COMPANY_STATE'),
+      companyResponsible: const String.fromEnvironment('COMPANY_RESPONSIBLE'),
       brandColor: Color(int.parse(brandColorHex, radix: 16)),
       logoAsset: const String.fromEnvironment('LOGO_ASSET'),
     );
@@ -35,6 +43,10 @@ class ClientConfig {
   final String companyName;
   final String companyDocument;
   final String companyPhone;
+  final String companyAddress;
+  final String companyCity;
+  final String companyState;
+  final String companyResponsible;
   final Color brandColor;
   final String logoAsset;
 

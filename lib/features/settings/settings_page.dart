@@ -1,11 +1,46 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_dependencies.dart';
 import '../../core/config/client_config.dart';
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.config});
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key, required this.dependencies});
 
-  final ClientConfig config;
+  final AppDependencies dependencies;
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  String? _responsibleName;
+
+  ClientConfig get _config => widget.dependencies.config;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadResponsible();
+  }
+
+  Future<void> _loadResponsible() async {
+    final name = await widget.dependencies.settings.responsibleName(
+      fallback: _config.companyResponsible,
+    );
+    if (!mounted) return;
+    setState(() => _responsibleName = name);
+  }
+
+  Future<void> _editResponsible() async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => _ResponsibleDialog(initialName: _responsibleName ?? ''),
+    );
+
+    if (name == null || name.trim().isEmpty) return;
+    await widget.dependencies.settings.setResponsibleName(name);
+    await _loadResponsible();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,10 +49,63 @@ class SettingsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (!config.isConfigured) const _NotConfiguredWarning(),
-          _CompanyCard(config: config),
+          if (!_config.isConfigured) const _NotConfiguredWarning(),
+          _CompanyCard(config: _config),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Responsável'),
+              subtitle: Text(_responsibleName ?? '…'),
+              trailing: const Icon(Icons.edit_outlined),
+              onTap: _responsibleName == null ? null : _editResponsible,
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Owns its text controller so it is disposed only after the dialog's
+/// closing animation. Pops with the typed name, or null on cancel.
+class _ResponsibleDialog extends StatefulWidget {
+  const _ResponsibleDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_ResponsibleDialog> createState() => _ResponsibleDialogState();
+}
+
+class _ResponsibleDialogState extends State<_ResponsibleDialog> {
+  late final _controller = TextEditingController(text: widget.initialName);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Responsável'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        decoration: const InputDecoration(labelText: 'Nome'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Salvar'),
+        ),
+      ],
     );
   }
 }
@@ -53,6 +141,9 @@ class _CompanyCard extends StatelessWidget {
             if (config.companyDocument.isNotEmpty)
               Text('CNPJ: ${config.companyDocument}'),
             if (config.companyPhone.isNotEmpty) Text(config.companyPhone),
+            if (config.companyAddress.isNotEmpty) Text(config.companyAddress),
+            if (config.companyCity.isNotEmpty)
+              Text('${config.companyCity} - ${config.companyState}'),
           ],
         ),
       ),

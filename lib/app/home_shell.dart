@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../core/config/client_config.dart';
 import '../features/history/history_page.dart';
 import '../features/settings/settings_page.dart';
+import 'app_dependencies.dart';
 
 /// Root screen with the bottom navigation bar.
 ///
 /// Tabs live in an [IndexedStack] so each one keeps its state (scroll,
 /// search) when the user switches between them.
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, required this.config});
+  const HomeShell({super.key, required this.dependencies});
 
-  final ClientConfig config;
+  final AppDependencies dependencies;
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -26,8 +26,8 @@ class _HomeShellState extends State<HomeShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          const HistoryPage(),
-          SettingsPage(config: widget.config),
+          HistoryPage(dependencies: widget.dependencies),
+          SettingsPage(dependencies: widget.dependencies),
         ],
       ),
       bottomNavigationBar: NavigationBar(
