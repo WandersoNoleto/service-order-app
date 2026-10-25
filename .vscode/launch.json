@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "standard (demo)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--flavor", "standard",
+        "--dart-define-from-file=clients/default/config.json"
+      ]
+    },
+    {
+      "name": "val",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--flavor", "val",
+        "--dart-define-from-file=clients/private/val/config.json"
+      ]
+    }
+  ]
+}

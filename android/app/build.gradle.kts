@@ -29,6 +29,25 @@ android {
         versionName = flutter.versionName
     }
 
+    buildFeatures {
+        resValues = true
+    }
+
+    // One flavor per client. Branding (name, logo, colors) comes from
+    // clients/<folder>/config.json via --dart-define-from-file.
+    flavorDimensions += "client"
+    productFlavors {
+        create("standard") {
+            dimension = "client"
+            resValue("string", "app_name", "Ordens de Serviço")
+        }
+        create("val") {
+            dimension = "client"
+            applicationIdSuffix = ".val"
+            resValue("string", "app_name", "Ordens de Serviço")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

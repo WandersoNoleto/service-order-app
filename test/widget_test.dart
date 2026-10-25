@@ -1,30 +1,37 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:service_order_app/main.dart';
+import 'package:service_order_app/app/app.dart';
+import 'package:service_order_app/core/config/client_config.dart';
+
+const _config = ClientConfig(
+  channel: '',
+  companyName: 'Empresa Teste',
+  companyDocument: '',
+  companyPhone: '',
+  brandColor: Color(0xFF1B1B1B),
+  logoAsset: '',
+);
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('starts on history and switches to settings', (tester) async {
+    await tester.pumpWidget(const ServiceOrderApp(config: _config));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Empresa Teste'), findsOneWidget);
+  });
+
+  testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
+    await tester.pumpWidget(const ServiceOrderApp(config: _config));
+
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nova OS'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
   });
 }

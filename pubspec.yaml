@@ -1,5 +1,5 @@
 name: service_order_app
-description: "A new Flutter project."
+description: "Offline-first Android app to create service orders and export them as A4 PDF or image."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -56,6 +56,15 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Client branding: each flavor bundles only its own client's files.
+  # clients/private/ comes from the private repo; on a public clone it is
+  # missing and Flutter just logs a warning for the "val" entry.
+  assets:
+    - path: clients/default/branding/
+      flavors: [standard]
+    - path: clients/private/val/branding/
+      flavors: [val]
 
   # To add assets to your application, add an assets section, like this:
   # assets:
