@@ -32,9 +32,17 @@ pw.Document buildServiceOrderDocument({
 
   document.addPage(
     pw.MultiPage(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 20),
-      theme: theme,
+      pageTheme: pw.PageTheme(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.fromLTRB(28, 28, 28, 20),
+        theme: theme,
+        // Without an explicit white background, the page images exported
+        // for "share as image" come out transparent.
+        buildBackground: (_) => pw.FullPage(
+          ignoreMargins: true,
+          child: pw.Container(color: PdfColors.white),
+        ),
+      ),
       header: (context) => context.pageNumber == 1
           ? pw.SizedBox()
           : _continuationHeader(order, company, style),
@@ -225,27 +233,30 @@ pw.Widget _titleBox(ServiceOrder order, _Style style) {
     [
       _Cell(
         flex: 1,
-        height: 48,
+        height: 34,
         child: pw.Center(
           child: pw.Text(
             'ASSISTÊNCIA TÉCNICA',
-            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
           ),
         ),
       ),
       _Cell(
         flex: 1,
-        height: 48,
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text('ORDEM DE SERVIÇO:', style: const pw.TextStyle(fontSize: 12)),
-            pw.SizedBox(height: 4),
-            pw.Text(
-              order.orderNumber,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-          ],
+        height: 34,
+        // Label and number on one line: two stacked lines plus spacing do
+        // not fit in the 34pt box, and the overflowing line is not drawn.
+        child: pw.RichText(
+          text: pw.TextSpan(
+            text: 'ORDEM DE SERVIÇO: ',
+            style: const pw.TextStyle(fontSize: 8.5),
+            children: [
+              pw.TextSpan(
+                text: order.orderNumber,
+                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     ],
