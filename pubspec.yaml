@@ -38,6 +38,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   sqflite: ^2.4.5
   path: ^1.9.1
+  pdf: ^3.13.1
+  printing: ^5.15.1
+  share_plus: ^13.3.1
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +70,9 @@ flutter:
   # clients/private/ comes from the private repo; on a public clone it is
   # missing and Flutter just logs a warning for the "val" entry.
   assets:
+    # PDF font (Liberation Sans, SIL OFL 1.1 — see assets/fonts/LICENSE-LiberationSans.txt).
+    - assets/fonts/LiberationSans-Regular.ttf
+    - assets/fonts/LiberationSans-Bold.ttf
     - path: clients/default/branding/
       flavors: [standard]
     - path: clients/private/val/branding/
