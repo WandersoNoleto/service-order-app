@@ -7,8 +7,8 @@ import 'widgets/form_fields.dart';
 
 /// Create or edit a service order. Pushed over the shell (no bottom bar).
 ///
-/// Pops with `true` when the order was saved or deleted, so the history
-/// knows it has to reload.
+/// Pops with the order id when saved, or null when the user leaves without
+/// saving. Deleting lives on the preview screen.
 class ServiceOrderFormPage extends StatefulWidget {
   const ServiceOrderFormPage({
     super.key,
@@ -140,27 +140,16 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
       ],
     );
 
+    final int id;
     if (_isEditing) {
       await deps.orders.update(order);
+      id = order.id!;
     } else {
-      await deps.orders.create(order);
+      id = await deps.orders.create(order);
     }
 
     if (!mounted) return;
-    Navigator.of(context).pop(true);
-  }
-
-  Future<void> _delete() async {
-    final confirmed = await _confirm(
-      title: 'Excluir esta OS?',
-      message: 'Ela será removida do histórico. Esta ação não pode ser desfeita.',
-      action: 'Excluir',
-    );
-    if (!confirmed || !mounted) return;
-
-    await widget.dependencies.orders.delete(_initial.id!);
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(id);
   }
 
   /// Back button with unsaved changes asks before discarding them.
@@ -170,7 +159,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
       message: 'O que você preencheu não foi salvo.',
       action: 'Descartar',
     );
-    if (discard && mounted) Navigator.of(context).pop(false);
+    if (discard && mounted) Navigator.of(context).pop();
   }
 
   Future<bool> _confirm({
@@ -206,17 +195,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
         if (!didPop) _onPopBlocked();
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(_isEditing ? 'Editar OS' : 'Nova OS'),
-          actions: [
-            if (_isEditing)
-              IconButton(
-                tooltip: 'Excluir',
-                icon: const Icon(Icons.delete_outline),
-                onPressed: _saving ? null : _delete,
-              ),
-          ],
-        ),
+        appBar: AppBar(title: Text(_isEditing ? 'Editar OS' : 'Nova OS')),
         body: Form(
           key: _formKey,
           child: ListView(

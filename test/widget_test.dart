@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
+import 'package:service_order_app/features/service_order/data/service_order.dart';
 
 import 'fakes.dart';
+
+const _order = ServiceOrder(orderNumber: '0007', customerName: 'Dr. Pedro');
 
 void main() {
   testWidgets('starts on history and switches to settings', (tester) async {
@@ -30,7 +33,8 @@ void main() {
     expect(find.byType(NavigationBar), findsNothing);
   });
 
-  testWidgets('saved order shows up in the history', (tester) async {
+  testWidgets('saving a new order opens its preview, then lists it',
+      (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
@@ -45,9 +49,58 @@ void main() {
     await tester.tap(find.text('Salvar OS'));
     await tester.pumpAndSettle();
 
+    // Preview of the new order.
     expect(find.text('Nova OS'), findsNothing);
+    expect(find.text('Enviar PDF'), findsOneWidget);
+    expect(find.text('OS 0001'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
     expect(find.text('OS 0001'), findsOneWidget);
     expect(find.textContaining('Clínica Sorriso'), findsOneWidget);
+  });
+
+  testWidgets('preview actions share and print the order', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order);
+    final documents = deps.documents as FakeServiceOrderDocuments;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OS 0007'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Enviar PDF'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Imagem'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Imprimir'));
+    await tester.pumpAndSettle();
+
+    expect(documents.sharedPdfs.single.orderNumber, '0007');
+    expect(documents.sharedImages.single.orderNumber, '0007');
+    expect(documents.printed.single.orderNumber, '0007');
+  });
+
+  testWidgets('deleting from the preview removes the order', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order);
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('OS 0007'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Excluir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
   });
 
   testWidgets('leaving an edited form asks before discarding', (tester) async {

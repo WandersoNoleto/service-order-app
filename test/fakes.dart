@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/painting.dart';
 
 import 'package:service_order_app/app/app_dependencies.dart';
 import 'package:service_order_app/core/config/client_config.dart';
+import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
 import 'package:service_order_app/features/settings/data/settings_repository.dart';
@@ -24,7 +27,33 @@ AppDependencies fakeDependencies({String responsible = 'Valdejane'}) {
     ),
     orders: FakeServiceOrderRepository(),
     settings: FakeSettingsRepository(),
+    documents: FakeServiceOrderDocuments(),
   );
+}
+
+/// Records actions instead of building PDFs or calling Android plugins.
+class FakeServiceOrderDocuments implements ServiceOrderDocuments {
+  final sharedPdfs = <ServiceOrder>[];
+  final sharedImages = <ServiceOrder>[];
+  final printed = <ServiceOrder>[];
+
+  @override
+  Future<Uint8List> buildPdf(ServiceOrder order) async => Uint8List(0);
+
+  @override
+  Future<List<Uint8List>> renderPages(Uint8List pdf) async => [];
+
+  @override
+  Future<void> sharePdf(ServiceOrder order, Uint8List pdf) async =>
+      sharedPdfs.add(order);
+
+  @override
+  Future<void> shareImages(ServiceOrder order, List<Uint8List> pages) async =>
+      sharedImages.add(order);
+
+  @override
+  Future<void> printPdf(ServiceOrder order, Uint8List pdf) async =>
+      printed.add(order);
 }
 
 class FakeServiceOrderRepository implements ServiceOrderRepository {
