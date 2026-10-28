@@ -3,9 +3,9 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../core/config/client_config.dart';
 import '../../core/formatting/formatters.dart';
 import '../service_order/data/service_order.dart';
+import '../settings/data/company_profile.dart';
 import 'pdf_assets.dart';
 
 /// Builds the A4 service order following the client's paper template.
@@ -15,7 +15,7 @@ import 'pdf_assets.dart';
 /// "equipment ok") is kept together.
 pw.Document buildServiceOrderDocument({
   required ServiceOrder order,
-  required ClientConfig company,
+  required CompanyProfile company,
   required PdfAssets assets,
 }) {
   final style = _Style(company);
@@ -69,7 +69,7 @@ pw.Document buildServiceOrderDocument({
 
 Future<Uint8List> buildServiceOrderPdf({
   required ServiceOrder order,
-  required ClientConfig company,
+  required CompanyProfile company,
   required PdfAssets assets,
 }) {
   return buildServiceOrderDocument(
@@ -83,7 +83,7 @@ Future<Uint8List> buildServiceOrderPdf({
 const _minPartRows = 7;
 
 class _Style {
-  _Style(ClientConfig company)
+  _Style(CompanyProfile company)
       : brand = PdfColor.fromInt(company.brandColor.toARGB32()),
         // Darker version of the brand color for the table header (navy-like).
         tableHeader =
@@ -106,7 +106,7 @@ class _Style {
 
 pw.Widget _companyHeader(
   ServiceOrder order,
-  ClientConfig company,
+  CompanyProfile company,
   PdfAssets assets,
   _Style style,
 ) {
@@ -195,7 +195,7 @@ pw.Widget _companyHeader(
 /// Compact line shown at the top of page 2 onwards.
 pw.Widget _continuationHeader(
   ServiceOrder order,
-  ClientConfig company,
+  CompanyProfile company,
   _Style style,
 ) {
   final number = order.orderNumber.isEmpty ? '' : ' · OS ${order.orderNumber}';

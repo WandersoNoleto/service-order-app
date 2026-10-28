@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/painting.dart';
 
 import 'package:service_order_app/app/app_dependencies.dart';
 import 'package:service_order_app/core/config/client_config.dart';
+import 'package:service_order_app/core/storage/logo_storage.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
@@ -29,6 +31,7 @@ AppDependencies fakeDependencies({String responsible = 'Valdejane'}) {
     orders: FakeServiceOrderRepository(),
     settings: FakeSettingsRepository(),
     documents: FakeServiceOrderDocuments(),
+    logos: FakeLogoStorage(),
   );
 }
 
@@ -38,8 +41,14 @@ class FakeServiceOrderDocuments implements ServiceOrderDocuments {
   final sharedImages = <ServiceOrder>[];
   final printed = <ServiceOrder>[];
 
+  /// Company profile used for each PDF built.
+  final builtFor = <CompanyProfile>[];
+
   @override
-  Future<Uint8List> buildPdf(ServiceOrder order) async => Uint8List(0);
+  Future<Uint8List> buildPdf(ServiceOrder order, CompanyProfile company) async {
+    builtFor.add(company);
+    return Uint8List(0);
+  }
 
   @override
   Future<List<Uint8List>> renderPages(Uint8List pdf) async => [];
@@ -142,4 +151,21 @@ class FakeSettingsRepository implements SettingsRepository {
     _overrides.clear();
     _logoFile = null;
   }
+}
+
+/// Pretends the user picked [nextPick]; never touches the file system.
+class FakeLogoStorage implements LogoStorage {
+  String? nextPick;
+
+  @override
+  Future<String?> pickAndImport() async => nextPick;
+
+  @override
+  Future<String> import(String sourcePath) async => sourcePath;
+
+  @override
+  Future<File?> resolve(String? fileName) async => null;
+
+  @override
+  Future<void> deleteAllExcept(String? keep) async {}
 }

@@ -10,6 +10,7 @@ import 'package:service_order_app/features/document/pdf_assets.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/document/service_order_pdf.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
+import 'package:service_order_app/features/settings/data/company_profile.dart';
 
 /// Sample PDFs are written here so the layout can be checked by eye.
 const _previewDir = 'build/pdf_preview';
@@ -82,7 +83,7 @@ void main() {
   Future<int> buildAndSave(ServiceOrder order, String fileName) async {
     final document = buildServiceOrderDocument(
       order: order,
-      company: _company,
+      company: const CompanyProfile(defaults: _company),
       assets: assets,
     );
     final bytes = await document.save();

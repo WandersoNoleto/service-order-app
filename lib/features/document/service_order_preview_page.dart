@@ -54,7 +54,8 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
         if (mounted) Navigator.of(context).pop();
         return;
       }
-      final pdf = await _deps.documents.buildPdf(order);
+      final company = await _deps.settings.companyProfile(_deps.config);
+      final pdf = await _deps.documents.buildPdf(order, company);
       final pages = await _deps.documents.renderPages(pdf);
       if (!mounted) return;
       setState(() {

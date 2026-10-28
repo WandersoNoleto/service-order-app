@@ -7,8 +7,9 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/config/client_config.dart';
+import '../../core/storage/logo_storage.dart';
 import '../service_order/data/service_order.dart';
+import '../settings/data/company_profile.dart';
 import 'pdf_assets.dart';
 import 'service_order_pdf.dart';
 
@@ -17,17 +18,30 @@ import 'service_order_pdf.dart';
 /// Files are always generated from the database, so nothing here is
 /// permanent: shared files go to the app's temporary folder.
 class ServiceOrderDocuments {
-  ServiceOrderDocuments(this._config);
+  ServiceOrderDocuments(this._logos);
 
-  final ClientConfig _config;
-  PdfAssets? _assets;
+  final LogoStorage _logos;
+
+  /// Fonts never change, so they are loaded once.
+  PdfAssets? _fonts;
 
   /// Resolution of the page images (preview and "share as image").
   static const imageDpi = 200.0;
 
-  Future<Uint8List> buildPdf(ServiceOrder order) async {
-    _assets ??= await PdfAssets.load(_config);
-    return buildServiceOrderPdf(order: order, company: _config, assets: _assets!);
+  /// Uses the company data as it is now (edited values or build defaults).
+  /// A custom logo that went missing falls back to the bundled one.
+  Future<Uint8List> buildPdf(ServiceOrder order, CompanyProfile company) async {
+    _fonts ??= await PdfAssets.loadFonts();
+    final logo = await PdfAssets.loadLogo(
+      customFile: await _logos.resolve(company.customLogoFile),
+      fallbackAsset: company.defaultLogoAsset,
+    );
+
+    return buildServiceOrderPdf(
+      order: order,
+      company: company,
+      assets: _fonts!.withLogo(logo),
+    );
   }
 
   /// One PNG per page.
