@@ -248,12 +248,12 @@ pw.Widget _titleBox(ServiceOrder order, _Style style) {
         // not fit in the 34pt box, and the overflowing line is not drawn.
         child: pw.RichText(
           text: pw.TextSpan(
-            text: 'ORDEM DE SERVIÇO: ',
-            style: const pw.TextStyle(fontSize: 8.5),
+            text: 'ORDEM DE SERVIÇO N°: ',
+            style: const pw.TextStyle(fontSize: 8),
             children: [
               pw.TextSpan(
                 text: order.orderNumber,
-                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+                style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
               ),
             ],
           ),
