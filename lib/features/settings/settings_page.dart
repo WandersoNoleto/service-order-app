@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
 import '../../core/config/client_config.dart';
+import 'data/company_profile.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.dependencies});
@@ -24,11 +25,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadResponsible() async {
-    final name = await widget.dependencies.settings.responsibleName(
-      fallback: _config.companyResponsible,
-    );
+    final profile = await widget.dependencies.settings.companyProfile(_config);
     if (!mounted) return;
-    setState(() => _responsibleName = name);
+    setState(() => _responsibleName = profile.responsibleName);
   }
 
   Future<void> _editResponsible() async {
@@ -38,7 +37,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
 
     if (name == null || name.trim().isEmpty) return;
-    await widget.dependencies.settings.setResponsibleName(name);
+    await widget.dependencies.settings.saveCompanyFields(
+      _config,
+      {CompanyField.responsible: name},
+    );
     await _loadResponsible();
   }
 

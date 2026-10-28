@@ -108,9 +108,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     final deps = widget.dependencies;
     final responsible = _isEditing
         ? _initial.responsibleName
-        : await deps.settings.responsibleName(
-            fallback: deps.config.companyResponsible,
-          );
+        : (await deps.settings.companyProfile(deps.config)).responsibleName;
 
     final order = ServiceOrder(
       id: _initial.id,
