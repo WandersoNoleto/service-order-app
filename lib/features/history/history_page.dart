@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
 import '../../core/formatting/formatters.dart';
+import '../document/service_order_preview_page.dart';
 import '../service_order/data/service_order.dart';
 import '../service_order/service_order_form_page.dart';
 
@@ -50,18 +51,30 @@ class _HistoryPageState extends State<HistoryPage> {
     _searchDebounce = Timer(const Duration(milliseconds: 300), _load);
   }
 
-  /// Opens the form to create ([order] null) or edit an order, and reloads
-  /// the list if something was saved or deleted.
-  Future<void> _openForm([ServiceOrder? order]) async {
-    final changed = await Navigator.of(context).push<bool>(
+  /// New order: form first, then its preview once saved.
+  Future<void> _createOrder() async {
+    final savedId = await Navigator.of(context).push<int>(
       MaterialPageRoute(
-        builder: (_) => ServiceOrderFormPage(
+        builder: (_) => ServiceOrderFormPage(dependencies: widget.dependencies),
+      ),
+    );
+    if (savedId == null) return;
+
+    await _load();
+    if (mounted) await _openPreview(savedId);
+  }
+
+  /// The preview can edit or delete the order, so always reload after it.
+  Future<void> _openPreview(int orderId) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => ServiceOrderPreviewPage(
           dependencies: widget.dependencies,
-          initialOrder: order,
+          orderId: orderId,
         ),
       ),
     );
-    if (changed ?? false) await _load();
+    await _load();
   }
 
   @override
@@ -73,7 +86,7 @@ class _HistoryPageState extends State<HistoryPage> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: FilledButton.icon(
-              onPressed: () => _openForm(),
+              onPressed: _createOrder,
               icon: const Icon(Icons.add),
               label: const Text('Criar'),
             ),
@@ -116,7 +129,7 @@ class _HistoryPageState extends State<HistoryPage> {
         separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (_, index) {
           final order = orders[index];
-          return _OrderTile(order: order, onTap: () => _openForm(order));
+          return _OrderTile(order: order, onTap: () => _openPreview(order.id!));
         },
       ),
     );
