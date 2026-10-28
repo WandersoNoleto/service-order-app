@@ -110,6 +110,8 @@ void main() {
     await tester.tap(find.text('Criar'));
     await tester.pumpAndSettle();
     await tester.enterText(find.widgetWithText(TextFormField, 'Cliente'), 'X');
+    // Rebuild so PopScope sees canPop = false before tapping back.
+    await tester.pump();
 
     // pageBack() looks for the English "Back" tooltip; the app is pt-BR.
     await tester.tap(find.byType(BackButton));
