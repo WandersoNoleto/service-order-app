@@ -141,12 +141,19 @@ void main() {
       find.widgetWithText(TextFormField, 'Telefone / WhatsApp'),
       '(99) 91234-5678',
     );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Responsável'),
-      'Valdejane Souza',
+    // Last field: below the fold in the 800x600 test screen, and ListView
+    // only builds what is on screen.
+    final responsible = find.widgetWithText(TextFormField, 'Responsável');
+    await tester.scrollUntilVisible(
+      responsible,
+      200,
+      scrollable: find
+          .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
+          .first,
     );
+    await tester.enterText(responsible, 'Valdejane Souza');
     await tester.pump();
-    expect(find.textContaining('Padrão:'), findsNWidgets(2));
+    expect(find.text('Padrão: Valdejane'), findsOneWidget);
 
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
