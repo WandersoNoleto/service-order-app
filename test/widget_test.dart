@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
+import 'package:service_order_app/features/settings/data/company_profile.dart';
 
 import 'fakes.dart';
 
@@ -19,7 +20,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Valdejane'), findsOneWidget);
+    expect(find.text('Responsável: Valdejane'), findsOneWidget);
   });
 
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
@@ -124,19 +125,119 @@ void main() {
     expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
   });
 
-  testWidgets('responsible name can be edited in settings', (tester) async {
-    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
-    await tester.pumpAndSettle();
-
+  Future<void> openCompanyForm(WidgetTester tester) async {
     await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Responsável'));
+    await tester.tap(find.text('Editar'));
     await tester.pumpAndSettle();
+  }
 
-    await tester.enterText(find.byType(TextField).last, 'Valdejane Souza');
+  testWidgets('company data can be edited from settings', (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+    await openCompanyForm(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Telefone / WhatsApp'),
+      '(99) 91234-5678',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Responsável'),
+      'Valdejane Souza',
+    );
+    await tester.pump();
+    expect(find.textContaining('Padrão:'), findsNWidgets(2));
+
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Valdejane Souza'), findsOneWidget);
+    expect(find.text('Dados da empresa'), findsNothing);
+    expect(find.text('(99) 91234-5678'), findsOneWidget);
+    expect(find.text('Responsável: Valdejane Souza'), findsOneWidget);
+  });
+
+  testWidgets('company name is required', (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+    await openCompanyForm(tester);
+
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nome da empresa'), '');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Informe o nome da empresa'), findsOneWidget);
+    expect(find.text('Dados da empresa'), findsOneWidget);
+  });
+
+  testWidgets('a field can be restored to its default', (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+    await openCompanyForm(tester);
+
+    final name = find.widgetWithText(TextFormField, 'Nome da empresa');
+    await tester.enterText(name, 'Outra Empresa');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Restaurar padrão'));
+    await tester.pump();
+
+    expect(find.text('Empresa Teste'), findsOneWidget);
+    expect(find.textContaining('Padrão:'), findsNothing);
+  });
+
+  testWidgets('picked logo is saved with the company data', (tester) async {
+    final deps = fakeDependencies();
+    (deps.logos as FakeLogoStorage).nextPick = 'logo_new.png';
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await openCompanyForm(tester);
+
+    await tester.tap(find.text('Trocar logo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Usar logo padrão'), findsOneWidget);
+
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    final profile = await deps.settings.companyProfile(deps.config);
+    expect(profile.customLogoFile, 'logo_new.png');
+  });
+
+  testWidgets('reset restores all company data', (tester) async {
+    final deps = fakeDependencies();
+    await deps.settings.saveCompanyFields(
+      deps.config,
+      {CompanyField.name: 'Outra Empresa'},
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await openCompanyForm(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Restaurar tudo para o padrão'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Restaurar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Empresa Teste'), findsOneWidget);
+  });
+
+  testWidgets('the PDF uses the edited company data', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order);
+    await deps.settings.saveCompanyFields(
+      deps.config,
+      {CompanyField.phone: '(99) 91234-5678'},
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OS 0007'));
+    await tester.pumpAndSettle();
+
+    final documents = deps.documents as FakeServiceOrderDocuments;
+    expect(documents.builtFor.single.companyPhone, '(99) 91234-5678');
   });
 }
