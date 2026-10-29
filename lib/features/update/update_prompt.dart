@@ -15,12 +15,21 @@ Future<void> showUpdateDialog(
   final accepted = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Nova versão ${update.version.label}'),
+      title: const Text('Nova versão disponível'),
       content: SingleChildScrollView(
-        child: Text(
-          update.notes.isEmpty
-              ? 'Uma nova versão do app está disponível.'
-              : update.notes,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'A versão v${update.version.label} do aplicativo está '
+              'disponível.\n\nToque em "Atualizar" para instalar as '
+              'melhorias mais recentes.',
+            ),
+            // GitHub release notes are written in English, so they stay
+            // collapsed; the text above is what the client reads.
+            if (update.notes.isNotEmpty) _ReleaseNotes(notes: update.notes),
+          ],
         ),
       ),
       actions: [
@@ -45,6 +54,49 @@ Future<void> showUpdateDialog(
   if (failure != null && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(failure), duration: const Duration(seconds: 8)),
+    );
+  }
+}
+
+/// "Release notes >" link that expands the notes from the GitHub release.
+class _ReleaseNotes extends StatefulWidget {
+  const _ReleaseNotes({required this.notes});
+
+  final String notes;
+
+  @override
+  State<_ReleaseNotes> createState() => _ReleaseNotesState();
+}
+
+class _ReleaseNotesState extends State<_ReleaseNotes> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+        TextButton.icon(
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          onPressed: () => setState(() => _expanded = !_expanded),
+          iconAlignment: IconAlignment.end,
+          icon: Icon(_expanded ? Icons.expand_less : Icons.chevron_right),
+          label: const Text('Release notes'),
+        ),
+        if (_expanded)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(widget.notes, style: theme.textTheme.bodySmall),
+          ),
+      ],
     );
   }
 }

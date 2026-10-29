@@ -255,7 +255,7 @@ void main() {
     final update = AvailableUpdate(
       version: const AppVersion(1, 0, 1),
       tag: 'v1.0.1',
-      notes: 'Novo layout do histórico',
+      notes: 'New history layout',
       apkUrl: Uri.parse('https://example.com/app.apk'),
     );
 
@@ -267,8 +267,14 @@ void main() {
       await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nova versão 1.0.1'), findsOneWidget);
-      expect(find.text('Novo layout do histórico'), findsOneWidget);
+      expect(find.text('Nova versão disponível'), findsOneWidget);
+      expect(find.textContaining('v1.0.1'), findsOneWidget);
+
+      // Release notes stay collapsed until "Release notes" is tapped.
+      expect(find.text('New history layout'), findsNothing);
+      await tester.tap(find.text('Release notes'));
+      await tester.pump();
+      expect(find.text('New history layout'), findsOneWidget);
 
       await tester.tap(find.text('Atualizar'));
       await tester.pumpAndSettle();
@@ -286,7 +292,7 @@ void main() {
       await tester.tap(find.text('Depois'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nova versão 1.0.1'), findsNothing);
+      expect(find.text('Nova versão disponível'), findsNothing);
       expect((deps.installer as FakeUpdateInstaller).installed, isEmpty);
     });
 
