@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the generic channel: major*1000000 + minor*10000 + patch*100.
 # tool/build_release.sh reads it and checks it; client builds add their build
 # number (1-99) on top. Bump it in its own "chore: release x.y.z" commit.
-version: 1.0.2+1000200
+version: 1.0.3+1000300
 
 environment:
   sdk: ^3.13.7
