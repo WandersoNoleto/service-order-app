@@ -1,0 +1,7 @@
+# Copy to android/key.properties (git-ignored) and fill in the passwords.
+# The keystore itself lives outside the project and must be backed up:
+# losing it (or its password) means installed apps can never be updated.
+storeFile=/home/<user>/keystores/service-order-app.jks
+storePassword=
+keyAlias=service-order-app
+keyPassword=
