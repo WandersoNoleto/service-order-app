@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
-import '../../core/config/client_config.dart';
+import 'company_form_page.dart';
+import 'data/company_profile.dart';
+import 'widgets/company_logo.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key, required this.dependencies});
@@ -13,157 +15,115 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String? _responsibleName;
+  CompanyProfile? _profile;
 
-  ClientConfig get _config => widget.dependencies.config;
+  AppDependencies get _deps => widget.dependencies;
 
   @override
   void initState() {
     super.initState();
-    _loadResponsible();
+    _load();
   }
 
-  Future<void> _loadResponsible() async {
-    final name = await widget.dependencies.settings.responsibleName(
-      fallback: _config.companyResponsible,
-    );
+  Future<void> _load() async {
+    final profile = await _deps.settings.companyProfile(_deps.config);
     if (!mounted) return;
-    setState(() => _responsibleName = name);
+    setState(() => _profile = profile);
   }
 
-  Future<void> _editResponsible() async {
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => _ResponsibleDialog(initialName: _responsibleName ?? ''),
+  Future<void> _edit() async {
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => CompanyFormPage(dependencies: _deps, profile: _profile!),
+      ),
     );
-
-    if (name == null || name.trim().isEmpty) return;
-    await widget.dependencies.settings.setResponsibleName(name);
-    await _loadResponsible();
+    if (saved ?? false) await _load();
   }
 
   @override
   Widget build(BuildContext context) {
+    final profile = _profile;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Configurações')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (!_config.isConfigured) const _NotConfiguredWarning(),
-          _CompanyCard(config: _config),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Responsável'),
-              subtitle: Text(_responsibleName ?? '…'),
-              trailing: const Icon(Icons.edit_outlined),
-              onTap: _responsibleName == null ? null : _editResponsible,
+      body: profile == null
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (!_deps.config.isConfigured) const _NotConfiguredWarning(),
+                _CompanyCard(
+                  profile: profile,
+                  dependencies: _deps,
+                  onEdit: _edit,
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
 
-/// Owns its text controller so it is disposed only after the dialog's
-/// closing animation. Pops with the typed name, or null on cancel.
-class _ResponsibleDialog extends StatefulWidget {
-  const _ResponsibleDialog({required this.initialName});
-
-  final String initialName;
-
-  @override
-  State<_ResponsibleDialog> createState() => _ResponsibleDialogState();
-}
-
-class _ResponsibleDialogState extends State<_ResponsibleDialog> {
-  late final _controller = TextEditingController(text: widget.initialName);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Responsável'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(labelText: 'Nome'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_controller.text),
-          child: const Text('Salvar'),
-        ),
-      ],
-    );
-  }
-}
-
+/// Summary of the company data used on every OS.
 class _CompanyCard extends StatelessWidget {
-  const _CompanyCard({required this.config});
+  const _CompanyCard({
+    required this.profile,
+    required this.dependencies,
+    required this.onEdit,
+  });
 
-  final ClientConfig config;
+  final CompanyProfile profile;
+  final AppDependencies dependencies;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cityState = [profile.companyCity, profile.companyState]
+        .where((part) => part.isNotEmpty)
+        .join(' - ');
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 4,
           children: [
-            Text('Empresa', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 80,
-              child: config.logoAsset.isEmpty
-                  ? const _LogoMissing()
-                  : Image.asset(
-                      config.logoAsset,
-                      errorBuilder: (_, _, _) => const _LogoMissing(),
-                    ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Empresa', style: theme.textTheme.titleMedium),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('Editar'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(config.companyName, style: theme.textTheme.bodyLarge),
-            if (config.companyDocument.isNotEmpty)
-              Text('CNPJ: ${config.companyDocument}'),
-            if (config.companyPhone.isNotEmpty) Text(config.companyPhone),
-            if (config.companyAddress.isNotEmpty) Text(config.companyAddress),
-            if (config.companyCity.isNotEmpty)
-              Text('${config.companyCity} - ${config.companyState}'),
+            const SizedBox(height: 12),
+            CompanyLogo(
+              logos: dependencies.logos,
+              customLogoFile: profile.customLogoFile,
+              fallbackAsset: profile.defaultLogoAsset,
+            ),
+            const SizedBox(height: 12),
+            Text(profile.companyName, style: theme.textTheme.bodyLarge),
+            if (profile.companyDocument.isNotEmpty)
+              Text('CNPJ: ${profile.companyDocument}'),
+            if (profile.companyPhone.isNotEmpty) Text(profile.companyPhone),
+            if (profile.companyAddress.isNotEmpty) Text(profile.companyAddress),
+            if (cityState.isNotEmpty) Text(cityState),
+            if (profile.responsibleName.isNotEmpty)
+              Text('Responsável: ${profile.responsibleName}'),
+            const SizedBox(height: 8),
+            Text(
+              'Estes dados aparecem no cabeçalho de todas as OSs.',
+              style: theme.textTheme.bodySmall,
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _LogoMissing extends StatelessWidget {
-  const _LogoMissing();
-
-  @override
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.error;
-
-    return Row(
-      children: [
-        Icon(Icons.image_not_supported_outlined, color: color),
-        const SizedBox(width: 8),
-        Text('Logo não encontrada', style: TextStyle(color: color)),
-      ],
     );
   }
 }

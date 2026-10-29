@@ -1,12 +1,15 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/painting.dart';
 
 import 'package:service_order_app/app/app_dependencies.dart';
 import 'package:service_order_app/core/config/client_config.dart';
+import 'package:service_order_app/core/storage/logo_storage.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
+import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/settings/data/settings_repository.dart';
 
 /// In-memory repositories for widget tests (real SQLite is covered by the
@@ -28,6 +31,7 @@ AppDependencies fakeDependencies({String responsible = 'Valdejane'}) {
     orders: FakeServiceOrderRepository(),
     settings: FakeSettingsRepository(),
     documents: FakeServiceOrderDocuments(),
+    logos: FakeLogoStorage(),
   );
 }
 
@@ -37,8 +41,14 @@ class FakeServiceOrderDocuments implements ServiceOrderDocuments {
   final sharedImages = <ServiceOrder>[];
   final printed = <ServiceOrder>[];
 
+  /// Company profile used for each PDF built.
+  final builtFor = <CompanyProfile>[];
+
   @override
-  Future<Uint8List> buildPdf(ServiceOrder order) async => Uint8List(0);
+  Future<Uint8List> buildPdf(ServiceOrder order, CompanyProfile company) async {
+    builtFor.add(company);
+    return Uint8List(0);
+  }
 
   @override
   Future<List<Uint8List>> renderPages(Uint8List pdf) async => [];
@@ -106,13 +116,56 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
 }
 
 class FakeSettingsRepository implements SettingsRepository {
-  String? _responsibleName;
+  final _overrides = <CompanyField, String>{};
+  String? _logoFile;
 
   @override
-  Future<String> responsibleName({required String fallback}) async =>
-      _responsibleName ?? fallback;
+  Future<CompanyProfile> companyProfile(ClientConfig defaults) async =>
+      CompanyProfile(
+        defaults: defaults,
+        overrides: Map.of(_overrides),
+        customLogoFile: _logoFile,
+      );
 
   @override
-  Future<void> setResponsibleName(String name) async =>
-      _responsibleName = name.trim();
+  Future<void> saveCompanyFields(
+    ClientConfig defaults,
+    Map<CompanyField, String> values,
+  ) async {
+    final profile = CompanyProfile(defaults: defaults);
+    for (final MapEntry(key: field, value: raw) in values.entries) {
+      final value = raw.trim();
+      if (value == profile.defaultValue(field)) {
+        _overrides.remove(field);
+      } else {
+        _overrides[field] = value;
+      }
+    }
+  }
+
+  @override
+  Future<void> setCustomLogoFile(String? fileName) async => _logoFile = fileName;
+
+  @override
+  Future<void> resetCompany() async {
+    _overrides.clear();
+    _logoFile = null;
+  }
+}
+
+/// Pretends the user picked [nextPick]; never touches the file system.
+class FakeLogoStorage implements LogoStorage {
+  String? nextPick;
+
+  @override
+  Future<String?> pickAndImport() async => nextPick;
+
+  @override
+  Future<String> import(String sourcePath) async => sourcePath;
+
+  @override
+  Future<File?> resolve(String? fileName) async => null;
+
+  @override
+  Future<void> deleteAllExcept(String? keep) async {}
 }

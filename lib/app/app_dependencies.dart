@@ -1,4 +1,5 @@
 import '../core/config/client_config.dart';
+import '../core/storage/logo_storage.dart';
 import '../features/document/service_order_documents.dart';
 import '../features/service_order/data/service_order_repository.dart';
 import '../features/settings/data/settings_repository.dart';
@@ -12,10 +13,14 @@ class AppDependencies {
     required this.orders,
     required this.settings,
     required this.documents,
+    required this.logos,
   });
 
+  /// Build defaults. Screens showing company data should read
+  /// `settings.companyProfile(config)` instead, which includes user edits.
   final ClientConfig config;
   final ServiceOrderRepository orders;
   final SettingsRepository settings;
   final ServiceOrderDocuments documents;
+  final LogoStorage logos;
 }
