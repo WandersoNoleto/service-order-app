@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../update/update_checker.dart';
+import '../update/update_prompt.dart';
 import 'company_form_page.dart';
 import 'data/company_profile.dart';
 import 'widgets/company_logo.dart';
@@ -57,6 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   dependencies: _deps,
                   onEdit: _edit,
                 ),
+                _AboutCard(dependencies: _deps),
               ],
             ),
     );
@@ -123,6 +126,67 @@ class _CompanyCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Installed version and the manual "check for updates".
+class _AboutCard extends StatefulWidget {
+  const _AboutCard({required this.dependencies});
+
+  final AppDependencies dependencies;
+
+  @override
+  State<_AboutCard> createState() => _AboutCardState();
+}
+
+class _AboutCardState extends State<_AboutCard> {
+  late final Future<InstalledVersion> _installed =
+      widget.dependencies.updates.installedVersion();
+  bool _checking = false;
+
+  Future<void> _check() async {
+    final deps = widget.dependencies;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _checking = true);
+
+    try {
+      final update = await deps.updates.check();
+      if (!mounted) return;
+      if (update == null) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Você já está na versão mais recente.')),
+        );
+      } else {
+        await showUpdateDialog(context, update: update, installer: deps.installer);
+      }
+    } on UpdateCheckException catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.system_update_outlined),
+        title: FutureBuilder<InstalledVersion>(
+          future: _installed,
+          builder: (_, snapshot) => Text(
+            snapshot.hasData ? 'Versão ${snapshot.data!.name}' : 'Versão',
+          ),
+        ),
+        subtitle: const Text('Verificar atualizações'),
+        trailing: _checking
+            ? const SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.chevron_right),
+        onTap: _checking ? null : _check,
       ),
     );
   }

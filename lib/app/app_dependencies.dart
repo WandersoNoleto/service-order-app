@@ -3,6 +3,8 @@ import '../core/storage/logo_storage.dart';
 import '../features/document/service_order_documents.dart';
 import '../features/service_order/data/service_order_repository.dart';
 import '../features/settings/data/settings_repository.dart';
+import '../features/update/update_checker.dart';
+import '../features/update/update_installer.dart';
 
 /// Everything the screens need, created once in main.dart and passed down.
 ///
@@ -14,6 +16,8 @@ class AppDependencies {
     required this.settings,
     required this.documents,
     required this.logos,
+    required this.updates,
+    required this.installer,
   });
 
   /// Build defaults. Screens showing company data should read
@@ -23,4 +27,6 @@ class AppDependencies {
   final SettingsRepository settings;
   final ServiceOrderDocuments documents;
   final LogoStorage logos;
+  final UpdateChecker updates;
+  final UpdateInstaller installer;
 }

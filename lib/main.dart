@@ -8,6 +8,8 @@ import 'core/storage/logo_storage.dart';
 import 'features/document/service_order_documents.dart';
 import 'features/service_order/data/service_order_repository.dart';
 import 'features/settings/data/settings_repository.dart';
+import 'features/update/update_checker.dart';
+import 'features/update/update_installer.dart';
 
 Future<void> main() async {
   // Required before using plugins (sqflite) ahead of runApp.
@@ -25,6 +27,8 @@ Future<void> main() async {
         settings: SettingsRepository(database),
         documents: ServiceOrderDocuments(logos),
         logos: logos,
+        updates: UpdateChecker(channel: config.channel),
+        installer: UpdateInstaller(),
       ),
     ),
   );

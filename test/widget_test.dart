@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:service_order_app/app/app.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
+import 'package:service_order_app/features/update/app_version.dart';
+import 'package:service_order_app/features/update/update_checker.dart';
+import 'package:service_order_app/features/update/update_installer.dart';
 
 import 'fakes.dart';
 
@@ -246,5 +249,86 @@ void main() {
 
     final documents = deps.documents as FakeServiceOrderDocuments;
     expect(documents.builtFor.single.companyPhone, '(99) 91234-5678');
+  });
+
+  group('auto-update', () {
+    final update = AvailableUpdate(
+      version: const AppVersion(1, 0, 1),
+      tag: 'v1.0.1',
+      notes: 'New history layout',
+      apkUrl: Uri.parse('https://example.com/app.apk'),
+    );
+
+    testWidgets('offers a newer version on startup and installs it',
+        (tester) async {
+      final deps = fakeDependencies();
+      (deps.updates as FakeUpdateChecker).nextUpdate = update;
+
+      await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nova versão disponível'), findsOneWidget);
+      expect(find.textContaining('v1.0.1'), findsOneWidget);
+
+      // Release notes stay collapsed until "Release notes" is tapped.
+      expect(find.text('New history layout'), findsNothing);
+      await tester.tap(find.text('Release notes'));
+      await tester.pump();
+      expect(find.text('New history layout'), findsOneWidget);
+
+      await tester.tap(find.text('Atualizar'));
+      await tester.pumpAndSettle();
+
+      expect((deps.installer as FakeUpdateInstaller).installed.single.tag, 'v1.0.1');
+      expect(find.text('Baixando atualização'), findsNothing);
+    });
+
+    testWidgets('"Depois" closes the dialog without installing', (tester) async {
+      final deps = fakeDependencies();
+      (deps.updates as FakeUpdateChecker).nextUpdate = update;
+
+      await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Depois'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nova versão disponível'), findsNothing);
+      expect((deps.installer as FakeUpdateInstaller).installed, isEmpty);
+    });
+
+    testWidgets('install errors are shown to the user', (tester) async {
+      final deps = fakeDependencies();
+      (deps.updates as FakeUpdateChecker).nextUpdate = update;
+      (deps.installer as FakeUpdateInstaller).events = const [
+        InstallFailed('Falha ao baixar a atualização.'),
+      ];
+
+      await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Atualizar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Falha ao baixar a atualização.'), findsOneWidget);
+    });
+
+    testWidgets('settings shows the version and checks manually',
+        (tester) async {
+      await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Configurações'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Versão 1.0.0'),
+        200,
+        scrollable: find
+            .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
+            .first,
+      );
+      await tester.tap(find.text('Verificar atualizações'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Você já está na versão mais recente.'), findsOneWidget);
+    });
   });
 }

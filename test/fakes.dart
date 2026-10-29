@@ -11,6 +11,8 @@ import 'package:service_order_app/features/service_order/data/service_order.dart
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/settings/data/settings_repository.dart';
+import 'package:service_order_app/features/update/update_checker.dart';
+import 'package:service_order_app/features/update/update_installer.dart';
 
 /// In-memory repositories for widget tests (real SQLite is covered by the
 /// repository tests).
@@ -32,6 +34,8 @@ AppDependencies fakeDependencies({String responsible = 'Valdejane'}) {
     settings: FakeSettingsRepository(),
     documents: FakeServiceOrderDocuments(),
     logos: FakeLogoStorage(),
+    updates: FakeUpdateChecker(),
+    installer: FakeUpdateInstaller(),
   );
 }
 
@@ -168,4 +172,31 @@ class FakeLogoStorage implements LogoStorage {
 
   @override
   Future<void> deleteAllExcept(String? keep) async {}
+}
+
+/// Returns [nextUpdate] (null = up to date) without calling GitHub.
+class FakeUpdateChecker implements UpdateChecker {
+  AvailableUpdate? nextUpdate;
+
+  @override
+  String get channel => '';
+
+  @override
+  Future<AvailableUpdate?> check() async => nextUpdate;
+
+  @override
+  Future<InstalledVersion> installedVersion() async =>
+      (name: '1.0.0', code: 1000000);
+}
+
+/// Replays [events] instead of downloading and installing.
+class FakeUpdateInstaller implements UpdateInstaller {
+  List<InstallProgress> events = const [Downloading(50), InstallerOpened()];
+  final installed = <AvailableUpdate>[];
+
+  @override
+  Stream<InstallProgress> install(AvailableUpdate update) {
+    installed.add(update);
+    return Stream.fromIterable(events);
+  }
 }

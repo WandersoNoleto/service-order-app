@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../features/history/history_page.dart';
 import '../features/settings/settings_page.dart';
+import '../features/update/update_checker.dart';
+import '../features/update/update_prompt.dart';
 import 'app_dependencies.dart';
 
 /// Root screen with the bottom navigation bar.
@@ -19,6 +21,25 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  /// Silent check on startup: offline or GitHub errors are ignored here
+  /// (Settings has a manual check that reports them).
+  Future<void> _checkForUpdate() async {
+    final deps = widget.dependencies;
+    try {
+      final update = await deps.updates.check();
+      if (update == null || !mounted) return;
+      await showUpdateDialog(context, update: update, installer: deps.installer);
+    } on UpdateCheckException {
+      return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

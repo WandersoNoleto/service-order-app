@@ -1,3 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+// Release signing key. android/key.properties is git-ignored and points to
+// the keystore kept outside the project (see android/key.properties.example).
+// Every release MUST be signed with the same key, or installed apps can no
+// longer be updated.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+}
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -12,6 +25,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by ota_update (auto-update): newer Java APIs on old Androids.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -48,11 +63,22 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Left empty when key.properties is missing: release builds then
+            // fail loudly instead of silently falling back to the debug key.
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
@@ -65,4 +91,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Same version ota_update is built with.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
