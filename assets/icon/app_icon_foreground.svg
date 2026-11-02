@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Foreground of app_icon.svg, with a transparent background.
+       Used as the adaptive icon foreground and as the splash image.
+       Keep it in sync with the "foreground" group of app_icon.svg. -->
+  <defs>
+    <style>
+      .sheet { fill: #FFFFFF; }
+      .fold { fill: #D5E5DC; }
+      .ink { fill: #508D6B; }
+      .ink-line { fill: none; stroke: #508D6B; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+      .badge { fill: #FFC233; stroke: #508D6B; stroke-width: 16; }
+      .symbol { fill: none; stroke: #2F5A42; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <g id="foreground">
+    <path class="sheet"
+      d="M357 277 H607 L687 357 V727 Q687 747 667 747 H357 Q337 747 337 727 V297 Q337 277 357 277 Z" />
+    <path class="fold" d="M607 277 V337 Q607 357 627 357 H687 Z" />
+
+    <rect class="ink" x="377" y="317" width="170" height="40" rx="20" />
+
+    <g>
+      <rect class="ink-line" x="383" y="401" width="46" height="46" rx="10" />
+      <path class="ink-line" d="M394 424 L403 434 L419 413" />
+      <rect class="ink" x="452" y="414" width="190" height="20" rx="10" />
+
+      <rect class="ink-line" x="383" y="481" width="46" height="46" rx="10" />
+      <path class="ink-line" d="M394 504 L403 514 L419 493" />
+      <rect class="ink" x="452" y="494" width="190" height="20" rx="10" />
+
+      <rect class="ink-line" x="383" y="561" width="46" height="46" rx="10" />
+      <path class="ink-line" d="M394 584 L403 594 L419 573" />
+      <rect class="ink" x="452" y="574" width="100" height="20" rx="10" />
+    </g>
+
+    <circle class="badge" cx="640" cy="680" r="92" />
+    <path class="symbol" stroke-width="16" d="M640 612 V748" />
+    <path class="symbol" stroke-width="18"
+      d="M672 646 C664 633 652 628 638 628 C619 628 606 638 606 653 C606 669 620 675 640 680 C661 685 676 692 676 709 C676 724 662 733 642 733 C624 733 611 727 604 714" />
+  </g>
+</svg>
