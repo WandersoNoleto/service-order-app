@@ -122,15 +122,80 @@ class _HistoryPageState extends State<HistoryPage> {
           : const Center(child: Text('Nenhuma OS encontrada'));
     }
 
+    final entries = _groupByDay(orders);
+
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.separated(
-        itemCount: orders.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (_, index) {
-          final order = orders[index];
-          return _OrderTile(order: order, onTap: () => _openPreview(order.id!));
+      child: ListView.builder(
+        itemCount: entries.length,
+        itemBuilder: (_, index) => switch (entries[index]) {
+          _DayHeader(:final label) => _SectionHeader(label: label),
+          _OrderEntry(:final order, :final showDivider) => Column(
+              children: [
+                _OrderTile(order: order, onTap: () => _openPreview(order.id!)),
+                if (showDivider) const Divider(height: 1, indent: 16),
+              ],
+            ),
         },
+      ),
+    );
+  }
+
+  /// Orders come newest first, so a new section starts whenever the day
+  /// changes. Dividers only between orders of the same day.
+  List<_HistoryEntry> _groupByDay(List<ServiceOrder> orders) {
+    final entries = <_HistoryEntry>[];
+    String? currentLabel;
+
+    for (final (index, order) in orders.indexed) {
+      final label = formatDayLabel(order.createdAt!);
+      if (label != currentLabel) {
+        entries.add(_DayHeader(label));
+        currentLabel = label;
+      }
+
+      final next = index + 1 < orders.length ? orders[index + 1] : null;
+      final sameDayNext =
+          next != null && formatDayLabel(next.createdAt!) == label;
+      entries.add(_OrderEntry(order, showDivider: sameDayNext));
+    }
+    return entries;
+  }
+}
+
+sealed class _HistoryEntry {
+  const _HistoryEntry();
+}
+
+class _DayHeader extends _HistoryEntry {
+  const _DayHeader(this.label);
+
+  final String label;
+}
+
+class _OrderEntry extends _HistoryEntry {
+  const _OrderEntry(this.order, {required this.showDivider});
+
+  final ServiceOrder order;
+  final bool showDivider;
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+      child: Text(
+        label,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+        ),
       ),
     );
   }
@@ -148,11 +213,11 @@ class _OrderTile extends StatelessWidget {
     final customer =
         order.customerName.isEmpty ? 'Cliente não informado' : order.customerName;
 
+    // The day is in the section header; the tile shows the time.
     return ListTile(
       onTap: onTap,
       title: Text('OS $number'),
-      subtitle: Text('$customer\n${formatDate(order.createdAt)}'),
-      isThreeLine: true,
+      subtitle: Text('$customer · ${formatTime(order.createdAt!)}'),
       trailing: Text(
         'R\$ ${formatCents(order.totalCents)}',
         style: Theme.of(context).textTheme.titleSmall,

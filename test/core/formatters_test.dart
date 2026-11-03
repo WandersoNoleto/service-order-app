@@ -30,4 +30,31 @@ void main() {
     expect(formatDate(null), '');
     expect(formatDate(DateTime(2026, 3, 5)), '05/03/2026');
   });
+
+  test('formatDayLabel uses today, yesterday and full dates', () {
+    final now = DateTime(2026, 11, 3, 8);
+
+    expect(formatDayLabel(DateTime(2026, 11, 3, 23, 59), now: now), 'Hoje');
+    expect(formatDayLabel(DateTime(2026, 11, 2, 0, 1), now: now), 'Ontem');
+    expect(
+      formatDayLabel(DateTime(2026, 10, 25, 14), now: now),
+      '25 de outubro de 2026',
+    );
+    expect(
+      formatDayLabel(DateTime(2025, 3, 1), now: now),
+      '1 de março de 2025',
+    );
+  });
+
+  test('formatDayLabel handles month and year boundaries', () {
+    expect(
+      formatDayLabel(DateTime(2026, 12, 31), now: DateTime(2027, 1, 1)),
+      'Ontem',
+    );
+  });
+
+  test('formatTime', () {
+    expect(formatTime(DateTime(2026, 10, 5, 9, 7)), '09:07');
+    expect(formatTime(DateTime(2026, 10, 5, 23, 45)), '23:45');
+  });
 }

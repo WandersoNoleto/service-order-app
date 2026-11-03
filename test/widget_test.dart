@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
+import 'package:service_order_app/app/brand_bottom_bar.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/update/app_version.dart';
@@ -26,6 +27,32 @@ void main() {
     expect(find.text('Responsável: Valdejane'), findsOneWidget);
   });
 
+  testWidgets('history is split in sections by day', (tester) async {
+    final deps = fakeDependencies();
+    final orders = deps.orders as FakeServiceOrderRepository;
+    orders.clock = DateTime(2020, 5, 10, 9, 30);
+    await orders.create(const ServiceOrder(orderNumber: '0001'));
+    orders.clock = DateTime(2020, 5, 12, 14, 5);
+    await orders.create(const ServiceOrder(orderNumber: '0002'));
+    await orders.create(const ServiceOrder(orderNumber: '0003'));
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    expect(find.text('12 de maio de 2020'), findsOneWidget);
+    expect(find.text('10 de maio de 2020'), findsOneWidget);
+    expect(find.textContaining('14:05'), findsNWidgets(2));
+
+    // Newest day first, its orders under it.
+    final newestHeader = tester.getTopLeft(find.text('12 de maio de 2020')).dy;
+    final olderHeader = tester.getTopLeft(find.text('10 de maio de 2020')).dy;
+    final order3 = tester.getTopLeft(find.text('OS 0003')).dy;
+    final order1 = tester.getTopLeft(find.text('OS 0001')).dy;
+    expect(newestHeader < order3, isTrue);
+    expect(order3 < olderHeader, isTrue);
+    expect(olderHeader < order1, isTrue);
+  });
+
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
@@ -34,7 +61,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nova OS'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.byType(BrandBottomBar), findsNothing);
   });
 
   testWidgets('saving a new order opens its preview, then lists it',
