@@ -39,6 +39,36 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
 
   AppDependencies get _deps => widget.dependencies;
 
+  /// True when a field or the logo differs from what was loaded. Typing a
+  /// value back to the original counts as unchanged.
+  bool get _hasChanges =>
+      _logoFile != widget.profile.customLogoFile ||
+      _controllers.entries.any(
+        (entry) => entry.value.text != widget.profile.value(entry.key),
+      );
+
+  /// Back with unsaved changes asks before discarding them.
+  Future<void> _onPopBlocked() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text('O que você alterou não foi salvo.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Descartar'),
+          ),
+        ],
+      ),
+    );
+    if ((discard ?? false) && mounted) Navigator.of(context).pop();
+  }
+
   @override
   void dispose() {
     for (final controller in _controllers.values) {
@@ -105,6 +135,16 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onPopBlocked();
+      },
+      child: _buildScaffold(),
+    );
+  }
+
+  Widget _buildScaffold() {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dados da empresa'),
