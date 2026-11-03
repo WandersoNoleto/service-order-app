@@ -1,0 +1,14 @@
+# App icon of the generic "standard" flavor (android/app/src/standard/res).
+# Client flavors have their own config (symlinked from the private repo).
+# The same icon was also generated into android/app/src/main/res as the
+# fallback for any flavor without its own icon. Regenerate with:
+#   dart run flutter_launcher_icons
+# The PNGs come from assets/icon/*.svg (see assets/icon/README.md).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  # Legacy icon (Android < 8): full icon with background.
+  image_path: "assets/icon/app_icon.png"
+  # Adaptive icon (Android 8+): the launcher applies its own mask.
+  adaptive_icon_background: "#508D6B"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"

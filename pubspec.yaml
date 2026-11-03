@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the generic channel: major*1000000 + minor*10000 + patch*100.
 # tool/build_release.sh reads it and checks it; client builds add their build
 # number (1-99) on top. Bump it in its own "chore: release x.y.z" commit.
-version: 1.0.3+1000300
+version: 1.0.4+1000400
 
 environment:
   sdk: ^3.13.7
@@ -63,6 +63,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   sqflite_common_ffi: ^2.4.5
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

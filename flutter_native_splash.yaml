@@ -1,0 +1,19 @@
+# Native splash screen shown while the app starts. Regenerate after changes:
+#   dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#508D6B"
+  color_dark: "#508D6B"
+  image: assets/icon/app_icon_foreground.png
+  image_dark: assets/icon/app_icon_foreground.png
+
+  # Android 12+ has its own splash API: the image is shown inside a circle,
+  # which is why the icon artwork stays inside the central safe zone.
+  android_12:
+    color: "#508D6B"
+    color_dark: "#508D6B"
+    image: assets/icon/app_icon_foreground.png
+    image_dark: assets/icon/app_icon_foreground.png
+
+  android: true
+  ios: false
+  web: false

@@ -115,6 +115,15 @@ void main() {
     expect(byNumber.single.customerName, 'Dr. Pedro');
   });
 
+  test('findByNumber finds another order with the same number', () async {
+    final id = await repository.create(order);
+
+    expect((await repository.findByNumber('0001'))?.id, id);
+    expect(await repository.findByNumber('9999'), isNull);
+    // The order being edited does not count as a duplicate of itself.
+    expect(await repository.findByNumber('0001', exceptId: id), isNull);
+  });
+
   test('delete removes the order and its parts', () async {
     final id = await repository.create(order);
     await repository.delete(id);

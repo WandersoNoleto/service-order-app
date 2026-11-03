@@ -103,6 +103,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!await _confirmNumberIfDuplicated()) return;
     setState(() => _saving = true);
 
     final deps = widget.dependencies;
@@ -150,6 +151,29 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     Navigator.of(context).pop(id);
   }
 
+  /// The number is typed by the user, so it may repeat. Warns, but lets the
+  /// user save anyway (nothing is blocked or inferred). Returns false when
+  /// the user cancels.
+  Future<bool> _confirmNumberIfDuplicated() async {
+    final number = _orderNumber.text.trim();
+    if (number.isEmpty) return true;
+
+    final other = await widget.dependencies.orders.findByNumber(
+      number,
+      exceptId: _initial.id,
+    );
+    if (other == null || !mounted) return true;
+
+    final customer =
+        other.customerName.isEmpty ? '' : ', de ${other.customerName}';
+    return _confirm(
+      title: 'Número já usado',
+      message: 'Já existe a ordem de serviço nº $number$customer. '
+          'Salvar mesmo assim?',
+      action: 'Salvar mesmo assim',
+    );
+  }
+
   /// Back button with unsaved changes asks before discarding them.
   Future<void> _onPopBlocked() async {
     final discard = await _confirm(
@@ -193,7 +217,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
         if (!didPop) _onPopBlocked();
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(_isEditing ? 'Editar OS' : 'Nova OS')),
+        appBar: AppBar(title: Text(_isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço')),
         body: Form(
           key: _formKey,
           child: ListView(
@@ -202,7 +226,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
               FormSection(
                 title: 'Ordem de serviço',
                 children: [
-                  _field(_orderNumber, 'Nº da OS'),
+                  _field(_orderNumber, 'Nº da ordem de serviço'),
                 ],
               ),
               FormSection(
@@ -282,7 +306,12 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
               FormSection(
                 title: 'Serviços executados',
                 children: [
-                  _field(_servicesPerformed, 'Descrição', lines: 4),
+                  _field(
+                    _servicesPerformed,
+                    'Descrição',
+                    lines: 4,
+                    maxLength: ServiceOrder.servicesPerformedMaxLength,
+                  ),
                 ],
               ),
               FormSection(
@@ -323,7 +352,14 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
               ),
               FormSection(
                 title: 'Observações',
-                children: [_field(_notes, 'Observações', lines: 3)],
+                children: [
+                  _field(
+                    _notes,
+                    'Observações',
+                    lines: 3,
+                    maxLength: ServiceOrder.notesMaxLength,
+                  ),
+                ],
               ),
               FormSection(
                 title: 'Conclusão',
@@ -345,7 +381,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Salvando…' : 'Salvar OS'),
+              label: Text(_saving ? 'Salvando…' : 'Salvar ordem de serviço'),
             ),
           ),
         ),
@@ -359,6 +395,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     TextInputType? keyboard,
     int lines = 1,
     FormFieldValidator<String>? validator,
+    int? maxLength,
   }) {
     return TextFormField(
       controller: controller,
@@ -368,6 +405,8 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
       minLines: lines,
       maxLines: lines > 1 ? null : 1,
       validator: validator,
+      // Shows a "120/300" counter and stops typing at the PDF limit.
+      maxLength: maxLength,
     );
   }
 }

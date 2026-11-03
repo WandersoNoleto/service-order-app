@@ -74,6 +74,9 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
   final _orders = <int, ServiceOrder>{};
   var _nextId = 1;
 
+  /// Creation date given to the next saved order.
+  DateTime clock = DateTime(2026, 10, 25, 9);
+
   @override
   Future<int> create(ServiceOrder order) async {
     final id = _nextId++;
@@ -88,6 +91,12 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
 
   @override
   Future<ServiceOrder?> findById(int id) async => _orders[id];
+
+  @override
+  Future<ServiceOrder?> findByNumber(String number, {int? exceptId}) async =>
+      _orders.values
+          .where((o) => o.orderNumber == number && o.id != exceptId)
+          .firstOrNull;
 
   @override
   Future<List<ServiceOrder>> list({String query = ''}) async {
@@ -111,7 +120,7 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
   Future<void> delete(int id) async => _orders.remove(id);
 
   ServiceOrder _withId(ServiceOrder order, int id) {
-    final now = DateTime(2026, 10, 25).toIso8601String();
+    final now = clock.toIso8601String();
     return ServiceOrder.fromMap(
       {...order.toMap(), 'id': id, 'created_at': now, 'updated_at': now},
       items: order.items,

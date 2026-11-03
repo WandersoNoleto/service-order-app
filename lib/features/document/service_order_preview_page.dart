@@ -100,7 +100,7 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir esta OS?'),
+        title: const Text('Excluir esta ordem de serviço?'),
         content: const Text(
           'Ela será removida do histórico. Esta ação não pode ser desfeita.',
         ),
@@ -126,8 +126,8 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
   Widget build(BuildContext context) {
     final order = _order;
     final number = order == null || order.orderNumber.isEmpty
-        ? 'OS'
-        : 'OS ${order.orderNumber}';
+        ? 'Ordem de serviço'
+        : 'Ordem de serviço ${order.orderNumber}';
     final ready = _pdf != null && _pages != null && !_busy;
 
     return Scaffold(

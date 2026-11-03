@@ -46,3 +46,31 @@ String formatDate(DateTime? date) {
   final month = date.month.toString().padLeft(2, '0');
   return '$day/$month/${date.year}';
 }
+
+const _months = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+];
+
+/// Section title for a day in the history: "Hoje", "Ontem" or
+/// "25 de outubro de 2026". [now] exists for tests.
+String formatDayLabel(DateTime date, {DateTime? now}) {
+  final today = _dayNumber(now ?? DateTime.now());
+  final daysAgo = today - _dayNumber(date);
+
+  if (daysAgo == 0) return 'Hoje';
+  if (daysAgo == 1) return 'Ontem';
+  return '${date.day} de ${_months[date.month - 1]} de ${date.year}';
+}
+
+/// Calendar day as a number (UTC, so daylight saving never shifts it).
+int _dayNumber(DateTime date) =>
+    DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
+    Duration.millisecondsPerDay;
+
+/// DateTime(2026, 10, 5, 9, 7) -> "09:07".
+String formatTime(DateTime date) {
+  final hour = date.hour.toString().padLeft(2, '0');
+  final minute = date.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
+}

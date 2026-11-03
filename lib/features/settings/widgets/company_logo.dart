@@ -13,12 +13,14 @@ class CompanyLogo extends StatefulWidget {
     required this.customLogoFile,
     required this.fallbackAsset,
     this.height = 80,
+    this.alignment = Alignment.centerLeft,
   });
 
   final LogoStorage logos;
   final String? customLogoFile;
   final String fallbackAsset;
   final double height;
+  final Alignment alignment;
 
   @override
   State<CompanyLogo> createState() => _CompanyLogoState();
@@ -50,7 +52,7 @@ class _CompanyLogoState extends State<CompanyLogo> {
           if (file != null) {
             return Image.file(
               file,
-              alignment: Alignment.centerLeft,
+              alignment: widget.alignment,
               errorBuilder: (_, _, _) => _bundled(),
             );
           }
@@ -61,13 +63,16 @@ class _CompanyLogoState extends State<CompanyLogo> {
   }
 
   Widget _bundled() {
-    if (widget.fallbackAsset.isEmpty) return const _LogoMissing();
+    if (widget.fallbackAsset.isEmpty) return _missing();
     return Image.asset(
       widget.fallbackAsset,
-      alignment: Alignment.centerLeft,
-      errorBuilder: (_, _, _) => const _LogoMissing(),
+      alignment: widget.alignment,
+      errorBuilder: (_, _, _) => _missing(),
     );
   }
+
+  Widget _missing() =>
+      Align(alignment: widget.alignment, child: const _LogoMissing());
 }
 
 class _LogoMissing extends StatelessWidget {
@@ -78,6 +83,7 @@ class _LogoMissing extends StatelessWidget {
     final color = Theme.of(context).colorScheme.error;
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.image_not_supported_outlined, color: color),
         const SizedBox(width: 8),

@@ -130,3 +130,9 @@ key.properties
 # IDE
 .idea/
 *.iml
+
+# Client flavor icon/splash: configs are symlinks to the private repo and
+# the generated resources stay out of the public repo.
+/flutter_launcher_icons-val.yaml
+/flutter_native_splash-val.yaml
+android/app/src/val/

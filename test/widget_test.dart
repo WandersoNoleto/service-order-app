@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
+import 'package:service_order_app/app/brand_bottom_bar.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/update/app_version.dart';
@@ -17,13 +18,146 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
+    expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
 
     await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Responsável: Valdejane'), findsOneWidget);
+    expect(find.text('Valdejane'), findsOneWidget);
+  });
+
+  testWidgets('history is split in sections by day', (tester) async {
+    final deps = fakeDependencies();
+    final orders = deps.orders as FakeServiceOrderRepository;
+    orders.clock = DateTime(2020, 5, 10, 9, 30);
+    await orders.create(const ServiceOrder(orderNumber: '0001'));
+    orders.clock = DateTime(2020, 5, 12, 14, 5);
+    await orders.create(const ServiceOrder(orderNumber: '0002'));
+    await orders.create(const ServiceOrder(orderNumber: '0003'));
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    expect(find.text('12 de maio de 2020'), findsOneWidget);
+    expect(find.text('10 de maio de 2020'), findsOneWidget);
+    expect(find.textContaining('14:05'), findsNWidgets(2));
+
+    // Newest day first, its orders under it.
+    final newestHeader = tester.getTopLeft(find.text('12 de maio de 2020')).dy;
+    final olderHeader = tester.getTopLeft(find.text('10 de maio de 2020')).dy;
+    final order3 = tester.getTopLeft(find.text('0003')).dy;
+    final order1 = tester.getTopLeft(find.text('0001')).dy;
+    expect(newestHeader < order3, isTrue);
+    expect(order3 < olderHeader, isTrue);
+    expect(olderHeader < order1, isTrue);
+  });
+
+  testWidgets('day header stays pinned while its orders scroll', (tester) async {
+    final deps = fakeDependencies();
+    final orders = deps.orders as FakeServiceOrderRepository;
+    orders.clock = DateTime(2020, 5, 10, 9);
+    await orders.create(const ServiceOrder(orderNumber: '0001'));
+    orders.clock = DateTime(2020, 5, 12, 9);
+    for (var i = 2; i <= 20; i++) {
+      await orders.create(ServiceOrder(orderNumber: i.toString().padLeft(4, '0')));
+    }
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    final header = find.text('12 de maio de 2020');
+    final headerBefore = tester.getTopLeft(header).dy;
+    final itemBefore = tester.getTopLeft(find.text('0016')).dy;
+
+    // Scroll inside the 12 May group: the orders move, its header doesn't.
+    await tester.drag(find.text('0019'), const Offset(0, -200));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(find.text('0016')).dy, lessThan(itemBefore - 150));
+    expect(header, findsOneWidget);
+    expect(tester.getTopLeft(header).dy, headerBefore);
+  });
+
+  testWidgets('"Criar" in the bottom bar works from the settings tab',
+      (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Criar ordem de serviço'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+
+    // Leaving without saving lands on the history tab.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
+  });
+
+  testWidgets('duplicated order number asks before saving', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order); // nº 0007, Dr. Pedro
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nº da ordem de serviço'),
+      '0007',
+    );
+    await tester.tap(find.text('Salvar ordem de serviço'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Número já usado'), findsOneWidget);
+    expect(find.textContaining('de Dr. Pedro'), findsOneWidget);
+
+    // Cancel keeps the form open.
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+
+    // Saving anyway is allowed.
+    await tester.tap(find.text('Salvar ordem de serviço'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar mesmo assim'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect((await deps.orders.list(query: '0007')), hasLength(2));
+  });
+
+  testWidgets('company form asks before discarding changes', (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+
+    // No changes: back leaves right away.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Dados da empresa'), findsNothing);
+
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nome da empresa'),
+      'Outra Empresa',
+    );
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Descartar alterações?'), findsOneWidget);
+    await tester.tap(find.text('Descartar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dados da empresa'), findsNothing);
+    expect(find.text('Empresa Teste'), findsOneWidget);
   });
 
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
@@ -33,8 +167,8 @@ void main() {
     await tester.tap(find.text('Criar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nova OS'), findsOneWidget);
-    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+    expect(find.byType(BrandBottomBar), findsNothing);
   });
 
   testWidgets('saving a new order opens its preview, then lists it',
@@ -45,23 +179,23 @@ void main() {
     await tester.tap(find.text('Criar'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextFormField, 'Nº da OS'), '0001');
+    await tester.enterText(find.widgetWithText(TextFormField, 'Nº da ordem de serviço'), '0001');
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Cliente'),
       'Clínica Sorriso',
     );
-    await tester.tap(find.text('Salvar OS'));
+    await tester.tap(find.text('Salvar ordem de serviço'));
     await tester.pumpAndSettle();
 
     // Preview of the new order.
-    expect(find.text('Nova OS'), findsNothing);
+    expect(find.text('Nova ordem de serviço'), findsNothing);
     expect(find.text('Enviar PDF'), findsOneWidget);
-    expect(find.text('OS 0001'), findsOneWidget);
+    expect(find.text('Ordem de serviço 0001'), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
-    expect(find.text('OS 0001'), findsOneWidget);
+    expect(find.text('0001'), findsOneWidget);
     expect(find.textContaining('Clínica Sorriso'), findsOneWidget);
   });
 
@@ -73,7 +207,7 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('OS 0007'));
+    await tester.tap(find.text('0007'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Enviar PDF'));
@@ -95,7 +229,7 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('OS 0007'));
+    await tester.tap(find.text('0007'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -104,7 +238,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
+    expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
   testWidgets('leaving an edited form asks before discarding', (tester) async {
@@ -124,8 +258,8 @@ void main() {
 
     await tester.tap(find.text('Descartar'));
     await tester.pumpAndSettle();
-    expect(find.text('Nova OS'), findsNothing);
-    expect(find.text('Nenhuma OS emitida ainda'), findsOneWidget);
+    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
   Future<void> openCompanyForm(WidgetTester tester) async {
@@ -163,7 +297,7 @@ void main() {
 
     expect(find.text('Dados da empresa'), findsNothing);
     expect(find.text('(99) 91234-5678'), findsOneWidget);
-    expect(find.text('Responsável: Valdejane Souza'), findsOneWidget);
+    expect(find.text('Valdejane Souza'), findsOneWidget);
   });
 
   testWidgets('company name is required', (tester) async {
@@ -244,7 +378,7 @@ void main() {
 
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('OS 0007'));
+    await tester.tap(find.text('0007'));
     await tester.pumpAndSettle();
 
     final documents = deps.documents as FakeServiceOrderDocuments;
