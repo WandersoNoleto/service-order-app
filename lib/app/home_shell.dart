@@ -22,6 +22,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _currentIndex = 0;
+  final _historyKey = GlobalKey<HistoryPageState>();
 
   @override
   void initState() {
@@ -43,19 +44,32 @@ class _HomeShellState extends State<HomeShell> {
     }
   }
 
+  /// "Criar" works from any tab: it jumps to the history (which reloads and
+  /// opens the new order's preview once it is saved).
+  void _createOrder() {
+    setState(() => _currentIndex = 0);
+    _historyKey.currentState?.createOrder();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          HistoryPage(dependencies: widget.dependencies),
+          HistoryPage(key: _historyKey, dependencies: widget.dependencies),
           SettingsPage(dependencies: widget.dependencies),
         ],
       ),
       bottomNavigationBar: BrandBottomBar(
         currentIndex: _currentIndex,
         onSelected: (index) => setState(() => _currentIndex = index),
+        centerAction: BrandBottomBarAction(
+          icon: Icons.add,
+          label: 'Criar',
+          semanticLabel: 'Criar ordem de serviço',
+          onPressed: _createOrder,
+        ),
         items: const [
           BrandBottomBarItem(
             icon: Icons.receipt_long_outlined,

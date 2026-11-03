@@ -24,7 +24,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Responsável: Valdejane'), findsOneWidget);
+    expect(find.text('Valdejane'), findsOneWidget);
   });
 
   testWidgets('history is split in sections by day', (tester) async {
@@ -77,6 +77,24 @@ void main() {
     expect(tester.getTopLeft(find.text('0016')).dy, lessThan(itemBefore - 150));
     expect(header, findsOneWidget);
     expect(tester.getTopLeft(header).dy, headerBefore);
+  });
+
+  testWidgets('"Criar" in the bottom bar works from the settings tab',
+      (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Criar ordem de serviço'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+
+    // Leaving without saving lands on the history tab.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
@@ -216,7 +234,7 @@ void main() {
 
     expect(find.text('Dados da empresa'), findsNothing);
     expect(find.text('(99) 91234-5678'), findsOneWidget);
-    expect(find.text('Responsável: Valdejane Souza'), findsOneWidget);
+    expect(find.text('Valdejane Souza'), findsOneWidget);
   });
 
   testWidgets('company name is required', (tester) async {

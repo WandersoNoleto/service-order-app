@@ -14,10 +14,12 @@ class HistoryPage extends StatefulWidget {
   final AppDependencies dependencies;
 
   @override
-  State<HistoryPage> createState() => _HistoryPageState();
+  State<HistoryPage> createState() => HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage> {
+/// Public so the bottom bar's "Criar" button (in HomeShell) can start
+/// the create flow through a GlobalKey.
+class HistoryPageState extends State<HistoryPage> {
   final _searchController = TextEditingController();
   Timer? _searchDebounce;
 
@@ -51,8 +53,9 @@ class _HistoryPageState extends State<HistoryPage> {
     _searchDebounce = Timer(const Duration(milliseconds: 300), _load);
   }
 
-  /// New order: form first, then its preview once saved.
-  Future<void> _createOrder() async {
+  /// New order: form first, then its preview once saved. Called by the
+  /// "Criar" button of the bottom bar.
+  Future<void> createOrder() async {
     final savedId = await Navigator.of(context).push<int>(
       MaterialPageRoute(
         builder: (_) => ServiceOrderFormPage(dependencies: widget.dependencies),
@@ -82,16 +85,7 @@ class _HistoryPageState extends State<HistoryPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Histórico'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.icon(
-              onPressed: _createOrder,
-              icon: const Icon(Icons.add),
-              label: const Text('Criar'),
-            ),
-          ),
-        ],
+        // "Criar" lives in the bottom bar (raised center button).
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: Padding(
