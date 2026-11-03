@@ -5,6 +5,7 @@ import '../features/settings/settings_page.dart';
 import '../features/update/update_checker.dart';
 import '../features/update/update_prompt.dart';
 import 'app_dependencies.dart';
+import 'brand_bottom_bar.dart';
 
 /// Root screen with the bottom navigation bar.
 ///
@@ -51,18 +52,18 @@ class _HomeShellState extends State<HomeShell> {
           SettingsPage(dependencies: widget.dependencies),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
+      bottomNavigationBar: BrandBottomBar(
+        currentIndex: _currentIndex,
+        onSelected: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BrandBottomBarItem(
+            icon: Icons.receipt_long_outlined,
+            selectedIcon: Icons.receipt_long,
             label: 'Histórico',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
+          BrandBottomBarItem(
+            icon: Icons.settings_outlined,
+            selectedIcon: Icons.settings,
             label: 'Configurações',
           ),
         ],
