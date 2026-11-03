@@ -25,6 +25,13 @@ ThemeData buildTheme(Color brandColor) {
   return ThemeData(
     colorScheme: colorScheme,
     useMaterial3: true,
+    // Top bar stays white: Material 3 would tint it grey ("scrolled under")
+    // whenever the list scrolls behind it.
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+    ),
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
       isDense: true,

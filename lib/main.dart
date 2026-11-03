@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app/app.dart';
@@ -29,6 +30,10 @@ Future<void> main() async {
         logos: logos,
         updates: UpdateChecker(channel: config.channel),
         installer: UpdateInstaller(),
+        // Debug builds take their version from pubspec.yaml, so a published
+        // client build (x.y.z-val.N) always looks newer and the prompt would
+        // show on every `flutter run`.
+        checkUpdatesOnStartup: !kDebugMode,
       ),
     ),
   );

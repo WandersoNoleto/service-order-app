@@ -18,6 +18,7 @@ class AppDependencies {
     required this.logos,
     required this.updates,
     required this.installer,
+    this.checkUpdatesOnStartup = true,
   });
 
   /// Build defaults. Screens showing company data should read
@@ -29,4 +30,8 @@ class AppDependencies {
   final LogoStorage logos;
   final UpdateChecker updates;
   final UpdateInstaller installer;
+
+  /// Whether to look for a new version when the app opens. The manual
+  /// check in Settings works either way.
+  final bool checkUpdatesOnStartup;
 }

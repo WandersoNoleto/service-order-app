@@ -121,7 +121,7 @@ class _CompanyCard extends StatelessWidget {
               Text('Responsável: ${profile.responsibleName}'),
             const SizedBox(height: 8),
             Text(
-              'Estes dados aparecem no cabeçalho de todas as OSs.',
+              'Estes dados aparecem no cabeçalho de todas as ordens de serviço.',
               style: theme.textTheme.bodySmall,
             ),
           ],

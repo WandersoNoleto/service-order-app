@@ -193,7 +193,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
         if (!didPop) _onPopBlocked();
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(_isEditing ? 'Editar OS' : 'Nova OS')),
+        appBar: AppBar(title: Text(_isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço')),
         body: Form(
           key: _formKey,
           child: ListView(
@@ -202,7 +202,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
               FormSection(
                 title: 'Ordem de serviço',
                 children: [
-                  _field(_orderNumber, 'Nº da OS'),
+                  _field(_orderNumber, 'Nº da ordem de serviço'),
                 ],
               ),
               FormSection(
@@ -345,7 +345,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Salvando…' : 'Salvar OS'),
+              label: Text(_saving ? 'Salvando…' : 'Salvar ordem de serviço'),
             ),
           ),
         ),

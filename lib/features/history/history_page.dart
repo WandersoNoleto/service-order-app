@@ -119,7 +119,7 @@ class _HistoryPageState extends State<HistoryPage> {
     if (orders.isEmpty) {
       return _searchController.text.trim().isEmpty
           ? const _EmptyHistory()
-          : const Center(child: Text('Nenhuma OS encontrada'));
+          : const Center(child: Text('Nenhuma ordem de serviço encontrada'));
     }
 
     final entries = _groupByDay(orders);
@@ -209,14 +209,15 @@ class _OrderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final number = order.orderNumber.isEmpty ? 's/ nº' : order.orderNumber;
+    // Everything here is a service order: the number alone is the title.
+    final number = order.orderNumber.isEmpty ? 'Sem número' : order.orderNumber;
     final customer =
         order.customerName.isEmpty ? 'Cliente não informado' : order.customerName;
 
     // The day is in the section header; the tile shows the time.
     return ListTile(
       onTap: onTap,
-      title: Text('OS $number'),
+      title: Text(number),
       subtitle: Text('$customer · ${formatTime(order.createdAt!)}'),
       trailing: Text(
         'R\$ ${formatCents(order.totalCents)}',
@@ -245,7 +246,10 @@ class _EmptyHistory extends StatelessWidget {
               color: theme.colorScheme.outline,
             ),
             const SizedBox(height: 16),
-            Text('Nenhuma OS emitida ainda', style: theme.textTheme.titleMedium),
+            Text(
+              'Nenhuma ordem de serviço emitida ainda',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
               'Toque em "Criar" para emitir a primeira ordem de serviço.',

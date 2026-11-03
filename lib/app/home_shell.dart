@@ -33,6 +33,7 @@ class _HomeShellState extends State<HomeShell> {
   /// (Settings has a manual check that reports them).
   Future<void> _checkForUpdate() async {
     final deps = widget.dependencies;
+    if (!deps.checkUpdatesOnStartup) return;
     try {
       final update = await deps.updates.check();
       if (update == null || !mounted) return;
