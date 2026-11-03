@@ -85,17 +85,25 @@ class _CompanyCard extends StatelessWidget {
         .where((part) => part.isNotEmpty)
         .join(' - ');
 
+    final rows = [
+      ('Nome', profile.companyName),
+      ('CNPJ', profile.companyDocument),
+      ('Telefone', profile.companyPhone),
+      ('Endereço', profile.companyAddress),
+      ('Cidade', cityState),
+      ('Responsável', profile.responsibleName),
+    ];
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 4,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text('Empresa', style: theme.textTheme.titleMedium),
+                  child: Text('Empresa', style: theme.textTheme.titleLarge),
                 ),
                 FilledButton.tonalIcon(
                   onPressed: onEdit,
@@ -104,28 +112,68 @@ class _CompanyCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             CompanyLogo(
               logos: dependencies.logos,
               customLogoFile: profile.customLogoFile,
               fallbackAsset: profile.defaultLogoAsset,
+              height: 110,
+              alignment: Alignment.center,
             ),
-            const SizedBox(height: 12),
-            Text(profile.companyName, style: theme.textTheme.bodyLarge),
-            if (profile.companyDocument.isNotEmpty)
-              Text('CNPJ: ${profile.companyDocument}'),
-            if (profile.companyPhone.isNotEmpty) Text(profile.companyPhone),
-            if (profile.companyAddress.isNotEmpty) Text(profile.companyAddress),
-            if (cityState.isNotEmpty) Text(cityState),
-            if (profile.responsibleName.isNotEmpty)
-              Text('Responsável: ${profile.responsibleName}'),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
+            for (final (index, (label, value)) in rows.indexed) ...[
+              if (index > 0) const Divider(height: 1),
+              _InfoRow(label: label, value: value),
+            ],
+            const SizedBox(height: 16),
             Text(
               'Estes dados aparecem no cabeçalho de todas as ordens de serviço.',
-              style: theme.textTheme.bodySmall,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Label ........ value" line of the company card. Long values (address)
+/// wrap on the right side; empty values show a dash.
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '—' : value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
