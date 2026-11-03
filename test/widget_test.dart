@@ -53,6 +53,32 @@ void main() {
     expect(olderHeader < order1, isTrue);
   });
 
+  testWidgets('day header stays pinned while its orders scroll', (tester) async {
+    final deps = fakeDependencies();
+    final orders = deps.orders as FakeServiceOrderRepository;
+    orders.clock = DateTime(2020, 5, 10, 9);
+    await orders.create(const ServiceOrder(orderNumber: '0001'));
+    orders.clock = DateTime(2020, 5, 12, 9);
+    for (var i = 2; i <= 20; i++) {
+      await orders.create(ServiceOrder(orderNumber: i.toString().padLeft(4, '0')));
+    }
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    final header = find.text('12 de maio de 2020');
+    final headerBefore = tester.getTopLeft(header).dy;
+    final itemBefore = tester.getTopLeft(find.text('0016')).dy;
+
+    // Scroll inside the 12 May group: the orders move, its header doesn't.
+    await tester.drag(find.text('0019'), const Offset(0, -200));
+    await tester.pumpAndSettle();
+
+    expect(tester.getTopLeft(find.text('0016')).dy, lessThan(itemBefore - 150));
+    expect(header, findsOneWidget);
+    expect(tester.getTopLeft(header).dy, headerBefore);
+  });
+
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();

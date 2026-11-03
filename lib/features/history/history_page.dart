@@ -122,75 +122,98 @@ class _HistoryPageState extends State<HistoryPage> {
           : const Center(child: Text('Nenhuma ordem de serviço encontrada'));
     }
 
-    final entries = _groupByDay(orders);
-
+    // One group per day. The day header is pinned inside its group: it
+    // sticks to the top while that day's orders scroll, and the next day's
+    // header pushes it out when the group ends.
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView.builder(
-        itemCount: entries.length,
-        itemBuilder: (_, index) => switch (entries[index]) {
-          _DayHeader(:final label) => _SectionHeader(label: label),
-          _OrderEntry(:final order, :final showDivider) => Column(
-              children: [
-                _OrderTile(order: order, onTap: () => _openPreview(order.id!)),
-                if (showDivider) const Divider(height: 1, indent: 16),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          for (final (label: label, orders: dayOrders) in _groupByDay(orders))
+            SliverMainAxisGroup(
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _DayHeaderDelegate(label),
+                ),
+                SliverList.separated(
+                  itemCount: dayOrders.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(height: 1, indent: 16),
+                  itemBuilder: (_, index) {
+                    final order = dayOrders[index];
+                    return _OrderTile(
+                      order: order,
+                      onTap: () => _openPreview(order.id!),
+                    );
+                  },
+                ),
               ],
             ),
-        },
+        ],
       ),
     );
   }
 
-  /// Orders come newest first, so a new section starts whenever the day
-  /// changes. Dividers only between orders of the same day.
-  List<_HistoryEntry> _groupByDay(List<ServiceOrder> orders) {
-    final entries = <_HistoryEntry>[];
-    String? currentLabel;
+  /// Orders come newest first, so a new group starts whenever the day
+  /// changes.
+  List<({String label, List<ServiceOrder> orders})> _groupByDay(
+    List<ServiceOrder> orders,
+  ) {
+    final groups = <({String label, List<ServiceOrder> orders})>[];
 
-    for (final (index, order) in orders.indexed) {
+    for (final order in orders) {
       final label = formatDayLabel(order.createdAt!);
-      if (label != currentLabel) {
-        entries.add(_DayHeader(label));
-        currentLabel = label;
+      if (groups.isEmpty || groups.last.label != label) {
+        groups.add((label: label, orders: [order]));
+      } else {
+        groups.last.orders.add(order);
       }
-
-      final next = index + 1 < orders.length ? orders[index + 1] : null;
-      final sameDayNext =
-          next != null && formatDayLabel(next.createdAt!) == label;
-      entries.add(_OrderEntry(order, showDivider: sameDayNext));
     }
-    return entries;
+    return groups;
   }
 }
 
-sealed class _HistoryEntry {
-  const _HistoryEntry();
-}
-
-class _DayHeader extends _HistoryEntry {
-  const _DayHeader(this.label);
+/// Day title ("Hoje", "Ontem", "25 de outubro de 2026") pinned at the top
+/// of its group. Opaque, so the orders scroll underneath it.
+class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _DayHeaderDelegate(this.label);
 
   final String label;
-}
 
-class _OrderEntry extends _HistoryEntry {
-  const _OrderEntry(this.order, {required this.showDivider});
-
-  final ServiceOrder order;
-  final bool showDivider;
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.label});
-
-  final String label;
+  static const _height = 44.0;
 
   @override
-  Widget build(BuildContext context) {
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 6),
+    return Container(
+      height: _height,
+      alignment: Alignment.bottomLeft,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        // Hairline only while orders are scrolling underneath.
+        border: overlapsContent
+            ? Border(
+                bottom: BorderSide(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 0.5,
+                ),
+              )
+            : null,
+      ),
       child: Text(
         label,
         style: theme.textTheme.titleSmall?.copyWith(
@@ -199,6 +222,10 @@ class _SectionHeader extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  bool shouldRebuild(_DayHeaderDelegate oldDelegate) =>
+      oldDelegate.label != label;
 }
 
 class _OrderTile extends StatelessWidget {
