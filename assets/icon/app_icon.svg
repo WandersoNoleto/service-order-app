@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <!-- Generic app icon: service order sheet + checklist + dollar badge.
-       Everything that matters sits inside the adaptive-icon safe zone
-       (circle of radius ~313 around the center), so no launcher mask
-       cuts it. Colors are defined once below to make re-theming easy. -->
+       The artwork is drawn around the center and enlarged 20% by the
+       transform on "foreground", so it fills more of the icon. It still
+       fits the area launchers show (circle of radius ~341 around the
+       center); only the sheet corners touch its edge on circle masks.
+       Colors are defined once below to make re-theming easy. -->
   <defs>
     <style>
       .bg { fill: #508D6B; }
@@ -18,7 +20,8 @@
   <!-- Background (becomes the adaptive icon background layer) -->
   <rect id="background" class="bg" width="1024" height="1024" rx="224" />
 
-  <g id="foreground">
+  <!-- Artwork scale: change 1.2 to make it bigger or smaller. -->
+  <g id="foreground" transform="translate(512 512) scale(1.2) translate(-512 -512)">
     <!-- Sheet with folded top-right corner -->
     <path class="sheet"
       d="M357 277 H607 L687 357 V727 Q687 747 667 747 H357 Q337 747 337 727 V297 Q337 277 357 277 Z" />

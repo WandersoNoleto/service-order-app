@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- Foreground of app_icon.svg, with a transparent background.
-       Used as the adaptive icon foreground and as the splash image.
-       Keep it in sync with the "foreground" group of app_icon.svg. -->
+  <!-- Generic app icon: service order sheet + checklist + dollar badge.
+       The artwork is drawn around the center and enlarged 20% by the
+       transform on "foreground", so it fills more of the icon. It still
+       fits the area launchers show (circle of radius ~341 around the
+       center); only the sheet corners touch its edge on circle masks.
+       Colors are defined once below to make re-theming easy. -->
   <defs>
     <style>
+      .bg { fill: #508D6B; }
       .sheet { fill: #FFFFFF; }
       .fold { fill: #D5E5DC; }
       .ink { fill: #508D6B; }
@@ -13,13 +17,18 @@
     </style>
   </defs>
 
-  <g id="foreground">
+
+  <!-- Artwork scale: change 1.2 to make it bigger or smaller. -->
+  <g id="foreground" transform="translate(512 512) scale(1.2) translate(-512 -512)">
+    <!-- Sheet with folded top-right corner -->
     <path class="sheet"
       d="M357 277 H607 L687 357 V727 Q687 747 667 747 H357 Q337 747 337 727 V297 Q337 277 357 277 Z" />
     <path class="fold" d="M607 277 V337 Q607 357 627 357 H687 Z" />
 
+    <!-- Header bar -->
     <rect class="ink" x="377" y="317" width="170" height="40" rx="20" />
 
+    <!-- Checklist -->
     <g>
       <rect class="ink-line" x="383" y="401" width="46" height="46" rx="10" />
       <path class="ink-line" d="M394 424 L403 434 L419 413" />
@@ -34,6 +43,8 @@
       <rect class="ink" x="452" y="574" width="100" height="20" rx="10" />
     </g>
 
+    <!-- Dollar badge. The "$" is drawn as paths (not text), so it renders
+         the same without depending on any installed font. -->
     <circle class="badge" cx="640" cy="680" r="92" />
     <path class="symbol" stroke-width="16" d="M640 612 V748" />
     <path class="symbol" stroke-width="18"
