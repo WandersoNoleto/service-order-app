@@ -63,6 +63,20 @@ class ServiceOrderRepository {
     return ServiceOrder.fromMap(rows.first, items: items[id] ?? const []);
   }
 
+  /// Another order already using [number], ignoring the order [exceptId]
+  /// (the one being edited). Used to warn about duplicated numbers.
+  Future<ServiceOrder?> findByNumber(String number, {int? exceptId}) async {
+    final rows = await _db.query(
+      'service_orders',
+      where: exceptId == null
+          ? 'order_number = ?'
+          : 'order_number = ? AND id != ?',
+      whereArgs: [number, if (exceptId != null) exceptId],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : ServiceOrder.fromMap(rows.first);
+  }
+
   /// All orders, newest first. [query] filters by customer name or number.
   Future<List<ServiceOrder>> list({String query = ''}) async {
     final term = query.trim();

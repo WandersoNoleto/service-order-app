@@ -97,6 +97,69 @@ void main() {
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
+  testWidgets('duplicated order number asks before saving', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order); // nº 0007, Dr. Pedro
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Criar'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nº da ordem de serviço'),
+      '0007',
+    );
+    await tester.tap(find.text('Salvar ordem de serviço'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Número já usado'), findsOneWidget);
+    expect(find.textContaining('de Dr. Pedro'), findsOneWidget);
+
+    // Cancel keeps the form open.
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+
+    // Saving anyway is allowed.
+    await tester.tap(find.text('Salvar ordem de serviço'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar mesmo assim'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect((await deps.orders.list(query: '0007')), hasLength(2));
+  });
+
+  testWidgets('company form asks before discarding changes', (tester) async {
+    await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+
+    // No changes: back leaves right away.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('Dados da empresa'), findsNothing);
+
+    await tester.tap(find.text('Editar'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nome da empresa'),
+      'Outra Empresa',
+    );
+    await tester.pump();
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Descartar alterações?'), findsOneWidget);
+    await tester.tap(find.text('Descartar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dados da empresa'), findsNothing);
+    expect(find.text('Empresa Teste'), findsOneWidget);
+  });
+
   testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();

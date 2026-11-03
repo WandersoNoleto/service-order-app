@@ -93,6 +93,12 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
   Future<ServiceOrder?> findById(int id) async => _orders[id];
 
   @override
+  Future<ServiceOrder?> findByNumber(String number, {int? exceptId}) async =>
+      _orders.values
+          .where((o) => o.orderNumber == number && o.id != exceptId)
+          .firstOrNull;
+
+  @override
   Future<List<ServiceOrder>> list({String query = ''}) async {
     final term = query.trim().toLowerCase();
     return _orders.values

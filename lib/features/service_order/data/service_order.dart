@@ -63,6 +63,12 @@ class ServiceOrder {
 
   final String servicesPerformed;
   final String notes;
+
+  /// Longest texts the PDF boxes can show. The "Observações" box has room
+  /// for ~5 lines and "Serviços executados" for ~20 (about 60 characters per
+  /// line); the form enforces these limits so nothing is silently cut.
+  static const notesMaxLength = 300;
+  static const servicesPerformedMaxLength = 1200;
   final int laborCents;
 
   /// "O equipamento foi consertado e revisado…" — null when unchecked.
