@@ -49,15 +49,15 @@ void main() {
       expect(generic.code, 1020300);
       expect(generic.label, '1.2.3');
 
-      final client = AppVersion.parseTag('v1.2.3-val.4', channel: 'val')!;
+      final client = AppVersion.parseTag('v1.2.3-acme.4', channel: 'acme')!;
       expect(client.code, 1020304);
       expect(client.label, '1.2.3 (4)');
     });
 
     test('ignores tags of other channels', () {
-      expect(AppVersion.parseTag('v1.2.3-val.4', channel: ''), isNull);
-      expect(AppVersion.parseTag('v1.2.3', channel: 'val'), isNull);
-      expect(AppVersion.parseTag('v1.2.3-abc.1', channel: 'val'), isNull);
+      expect(AppVersion.parseTag('v1.2.3-acme.4', channel: ''), isNull);
+      expect(AppVersion.parseTag('v1.2.3', channel: 'acme'), isNull);
+      expect(AppVersion.parseTag('v1.2.3-abc.1', channel: 'acme'), isNull);
       expect(AppVersion.parseTag('1.2.3', channel: ''), isNull);
     });
 
@@ -74,7 +74,7 @@ void main() {
       final update = await _checker([
         _release('v1.0.1', body: 'Correções'),
         _release('v1.0.2', body: 'Novo layout'),
-        _release('v9.0.0-val.1'),
+        _release('v9.0.0-acme.1'),
       ]).check();
 
       expect(update!.tag, 'v1.0.2');
@@ -84,12 +84,12 @@ void main() {
 
     test('client channel only sees its own builds', () async {
       final update = await _checker(
-        [_release('v2.0.0'), _release('v1.0.0-val.2'), _release('v1.0.0-val.3')],
-        channel: 'val',
+        [_release('v2.0.0'), _release('v1.0.0-acme.2'), _release('v1.0.0-acme.3')],
+        channel: 'acme',
         installedCode: 1000002,
       ).check();
 
-      expect(update!.tag, 'v1.0.0-val.3');
+      expect(update!.tag, 'v1.0.0-acme.3');
     });
 
     test('null when the installed version is the newest', () async {

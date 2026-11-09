@@ -110,13 +110,15 @@ pw.Widget _companyHeader(
   PdfAssets assets,
   _Style style,
 ) {
+  // Only what the company filled in is printed: missing data (logo, phone,
+  // city, CNPJ, address, responsible) simply leaves no trace.
   final logo = assets.logo;
+  final cityState = [company.companyCity, company.companyState]
+      .where((part) => part.isNotEmpty)
+      .join('-')
+      .toUpperCase();
   final location = [
-    if (company.companyCity.isNotEmpty)
-      [company.companyCity, company.companyState]
-          .where((part) => part.isNotEmpty)
-          .join('-')
-          .toUpperCase(),
+    if (cityState.isNotEmpty) cityState,
     if (company.companyDocument.isNotEmpty) 'CNPJ: ${company.companyDocument}',
   ].join('  |  ');
 
@@ -125,20 +127,14 @@ pw.Widget _companyHeader(
     children: [
       pw.Expanded(
         flex: 2,
+        // No logo: the space stays blank.
         child: logo != null
             ? pw.Container(
                 height: 72,
                 alignment: pw.Alignment.centerLeft,
                 child: pw.Image(logo, fit: pw.BoxFit.contain),
               )
-            : pw.Text(
-                company.companyName,
-                style: pw.TextStyle(
-                  fontSize: 20,
-                  fontWeight: pw.FontWeight.bold,
-                  color: style.brand,
-                ),
-              ),
+            : pw.SizedBox(),
       ),
       pw.SizedBox(width: 12),
       pw.Expanded(

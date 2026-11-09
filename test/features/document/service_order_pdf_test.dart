@@ -15,26 +15,40 @@ import 'package:service_order_app/features/settings/data/company_profile.dart';
 /// Sample PDFs are written here so the layout can be checked by eye.
 const _previewDir = 'build/pdf_preview';
 
-/// Uses the real client logo when the private repo is present.
-const _valLogo = 'clients/private/val/branding/logo.jpeg';
+/// Any image works as a sample logo; the generic app icon is in the repo.
+const _sampleLogo = 'assets/icon/app_icon.png';
 
 const _company = ClientConfig(
-  channel: 'val',
-  companyName: 'AC Serviços',
-  companyDocument: '35.183.961/0001-63',
-  companyPhone: '(99) 98456-4555',
-  companyAddress: 'Rua Sá Sobrinho, 26 - Centro',
-  companyCity: 'São João dos Patos',
-  companyState: 'MA',
-  companyResponsible: 'Valdejane',
-  brandColor: Color(0xFF1F5FBF),
-  logoAsset: _valLogo,
+  channel: '',
+  companyName: 'Oficina Exemplo',
+  companyDocument: '00.000.000/0001-00',
+  companyPhone: '(00) 00000-0000',
+  companyAddress: 'Rua Exemplo, 100 - Centro',
+  companyCity: 'Cidade Exemplo',
+  companyState: 'UF',
+  companyResponsible: 'Fulano de Tal',
+  brandColor: Color(0xFF508D6B),
+  logoAsset: '',
+);
+
+/// Company with nothing filled in: the PDF header must simply stay empty.
+const _blankCompany = ClientConfig(
+  channel: '',
+  companyName: '',
+  companyDocument: '',
+  companyPhone: '',
+  companyAddress: '',
+  companyCity: '',
+  companyState: '',
+  companyResponsible: '',
+  brandColor: Color(0xFF508D6B),
+  logoAsset: '',
 );
 
 ServiceOrder _order({int parts = 2}) => ServiceOrder(
       id: 1,
       orderNumber: '0001',
-      responsibleName: 'Valdejane',
+      responsibleName: 'Fulano de Tal',
       customerName: 'Clínica Sorriso — Dr. João',
       customerDocument: '12.345.678/0001-90',
       customerAddress: 'Av. Getúlio Vargas, 1500, sala 3',
@@ -70,7 +84,7 @@ void main() {
   setUpAll(() {
     pw.Font font(String path) =>
         pw.Font.ttf(ByteData.sublistView(File(path).readAsBytesSync()));
-    final logo = File(_valLogo);
+    final logo = File(_sampleLogo);
 
     assets = PdfAssets(
       regular: font(PdfAssets.regularFontAsset),
@@ -80,11 +94,16 @@ void main() {
     Directory(_previewDir).createSync(recursive: true);
   });
 
-  Future<int> buildAndSave(ServiceOrder order, String fileName) async {
+  Future<int> buildAndSave(
+    ServiceOrder order,
+    String fileName, {
+    ClientConfig company = _company,
+    bool withLogo = true,
+  }) async {
     final document = buildServiceOrderDocument(
       order: order,
-      company: const CompanyProfile(defaults: _company),
-      assets: assets,
+      company: CompanyProfile(defaults: company),
+      assets: withLogo ? assets : assets.withLogo(null),
     );
     final bytes = await document.save();
     File('$_previewDir/$fileName').writeAsBytesSync(bytes);
@@ -99,6 +118,16 @@ void main() {
     final pages = await buildAndSave(
       const ServiceOrder(id: 2),
       'os_empty.pdf',
+    );
+    expect(pages, 1);
+  });
+
+  test('no logo and no company data leaves the header blank', () async {
+    final pages = await buildAndSave(
+      _order(),
+      'os_blank_company.pdf',
+      company: _blankCompany,
+      withLogo: false,
     );
     expect(pages, 1);
   });

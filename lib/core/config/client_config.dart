@@ -48,8 +48,10 @@ class ClientConfig {
   final String companyState;
   final String companyResponsible;
   final Color brandColor;
+  /// Empty when the build ships without a logo (the generic app); the user
+  /// can still add one in the app.
   final String logoAsset;
 
   /// False when the app was started without `--dart-define-from-file`.
-  bool get isConfigured => companyName.isNotEmpty && logoAsset.isNotEmpty;
+  bool get isConfigured => companyName.isNotEmpty;
 }

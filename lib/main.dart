@@ -31,7 +31,7 @@ Future<void> main() async {
         updates: UpdateChecker(channel: config.channel),
         installer: UpdateInstaller(),
         // Debug builds take their version from pubspec.yaml, so a published
-        // client build (x.y.z-val.N) always looks newer and the prompt would
+        // client build (x.y.z-<client>.N) always looks newer and the prompt would
         // show on every `flutter run`.
         checkUpdatesOnStartup: !kDebugMode,
       ),
