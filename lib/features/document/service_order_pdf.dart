@@ -3,7 +3,8 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../core/formatting/formatters.dart';
+import '../../core/formatting/region_format.dart';
+import '../../l10n/app_localizations.dart';
 import '../service_order/data/service_order.dart';
 import '../settings/data/company_profile.dart';
 import 'pdf_assets.dart';
@@ -17,8 +18,10 @@ pw.Document buildServiceOrderDocument({
   required ServiceOrder order,
   required CompanyProfile company,
   required PdfAssets assets,
+  required AppLocalizations l10n,
+  required RegionFormat format,
 }) {
-  final style = _Style(company);
+  final style = _Style(company, l10n, format);
   final baseTheme = pw.ThemeData.withFont(base: assets.regular, bold: assets.bold);
   final theme = baseTheme.copyWith(
     defaultTextStyle: baseTheme.defaultTextStyle.copyWith(
@@ -26,7 +29,7 @@ pw.Document buildServiceOrderDocument({
     ),
   );
   final document = pw.Document(
-    title: 'Ordem de Serviço ${order.orderNumber}',
+    title: l10n.pdfDocumentTitle(order.orderNumber),
     author: company.companyName,
   );
 
@@ -46,7 +49,7 @@ pw.Document buildServiceOrderDocument({
       header: (context) => context.pageNumber == 1
           ? pw.SizedBox()
           : _continuationHeader(order, company, style),
-      footer: _footer,
+      footer: (context) => _footer(context, style),
       build: (context) => [
         _companyHeader(order, company, assets, style),
         pw.SizedBox(height: 8),
@@ -71,19 +74,25 @@ Future<Uint8List> buildServiceOrderPdf({
   required ServiceOrder order,
   required CompanyProfile company,
   required PdfAssets assets,
+  required AppLocalizations l10n,
+  required RegionFormat format,
 }) {
   return buildServiceOrderDocument(
     order: order,
     company: company,
     assets: assets,
+    l10n: l10n,
+    format: format,
   ).save();
 }
 
 /// Minimum rows in the parts table, like the paper form.
 const _minPartRows = 7;
 
+/// Look of the document plus its language ([l10n]) and regional format
+/// ([format]); every building block receives it.
 class _Style {
-  _Style(CompanyProfile company)
+  _Style(CompanyProfile company, this.l10n, this.format)
       : brand = PdfColor.fromInt(company.brandColor.toARGB32()),
         // Darker version of the brand color for the table header (navy-like).
         tableHeader =
@@ -95,6 +104,8 @@ class _Style {
 
   final PdfColor brand;
   final PdfColor tableHeader;
+  final AppLocalizations l10n;
+  final RegionFormat format;
 
   pw.TextStyle get label => const pw.TextStyle(fontSize: labelSize);
   pw.TextStyle get value =>
@@ -119,7 +130,8 @@ pw.Widget _companyHeader(
       .toUpperCase();
   final location = [
     if (cityState.isNotEmpty) cityState,
-    if (company.companyDocument.isNotEmpty) 'CNPJ: ${company.companyDocument}',
+    if (company.companyDocument.isNotEmpty)
+      '${style.l10n.pdfCompanyDocument}: ${company.companyDocument}',
   ].join('  |  ');
 
   return pw.Row(
@@ -170,7 +182,7 @@ pw.Widget _companyHeader(
               pw.SizedBox(height: 2),
               pw.RichText(
                 text: pw.TextSpan(
-                  text: 'Responsável: ',
+                  text: '${style.l10n.pdfResponsible}: ',
                   style: const pw.TextStyle(fontSize: _Style.textSize),
                   children: [
                     pw.TextSpan(
@@ -194,13 +206,18 @@ pw.Widget _continuationHeader(
   CompanyProfile company,
   _Style style,
 ) {
-  final number = order.orderNumber.isEmpty ? '' : ' · OS ${order.orderNumber}';
+  final l10n = style.l10n;
   return pw.Container(
     margin: const pw.EdgeInsets.only(bottom: 8),
     padding: const pw.EdgeInsets.only(bottom: 4),
     decoration: const pw.BoxDecoration(border: pw.Border(bottom: _Style.line)),
     child: pw.Text(
-      '${company.companyName}$number · continuação',
+      order.orderNumber.isEmpty
+          ? l10n.pdfContinuation(company.companyName)
+          : l10n.pdfContinuationWithNumber(
+              company.companyName,
+              order.orderNumber,
+            ),
       style: style.value,
     ),
   );
@@ -208,13 +225,13 @@ pw.Widget _continuationHeader(
 
 /// Page counter, shown only when the order has more than one page.
 /// The height is always reserved so the layout does not shift.
-pw.Widget _footer(pw.Context context) {
+pw.Widget _footer(pw.Context context, _Style style) {
   return pw.Container(
     height: 12,
     alignment: pw.Alignment.bottomRight,
     child: context.pagesCount > 1
         ? pw.Text(
-            'Página ${context.pageNumber}/${context.pagesCount}',
+            style.l10n.pdfPage(context.pageNumber, context.pagesCount),
             style: const pw.TextStyle(fontSize: _Style.labelSize),
           )
         : null,
@@ -232,7 +249,7 @@ pw.Widget _titleBox(ServiceOrder order, _Style style) {
         height: 34,
         child: pw.Center(
           child: pw.Text(
-            'ASSISTÊNCIA TÉCNICA',
+            style.l10n.pdfTechnicalAssistance,
             style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
           ),
         ),
@@ -244,7 +261,7 @@ pw.Widget _titleBox(ServiceOrder order, _Style style) {
         // not fit in the 34pt box, and the overflowing line is not drawn.
         child: pw.RichText(
           text: pw.TextSpan(
-            text: 'ORDEM DE SERVIÇO N°: ',
+            text: '${style.l10n.pdfOrderNumber} ',
             style: const pw.TextStyle(fontSize: 8),
             children: [
               pw.TextSpan(
@@ -260,16 +277,17 @@ pw.Widget _titleBox(ServiceOrder order, _Style style) {
 }
 
 pw.Widget _customerGrid(ServiceOrder order, _Style style) {
+  final l10n = style.l10n;
   return _grid([
     [
-      _Cell.field('Cliente', order.customerName, style, flex: 3),
-      _Cell.field('CPF/CNPJ', order.customerDocument, style, flex: 2),
+      _Cell.field(l10n.customer, order.customerName, style, flex: 3),
+      _Cell.field(l10n.customerDocument, order.customerDocument, style, flex: 2),
     ],
-    [_Cell.field('Endereço', order.customerAddress, style)],
+    [_Cell.field(l10n.address, order.customerAddress, style)],
     [
-      _Cell.field('Cidade', order.customerCity, style, flex: 3),
-      _Cell.field('Estado', order.customerState, style, flex: 1),
-      _Cell.field('Contato', order.customerContact, style, flex: 2),
+      _Cell.field(l10n.city, order.customerCity, style, flex: 3),
+      _Cell.field(l10n.state, order.customerState, style, flex: 1),
+      _Cell.field(l10n.contact, order.customerContact, style, flex: 2),
     ],
   ]);
 }
@@ -282,22 +300,29 @@ pw.Widget _serviceCallGrid(ServiceOrder order, _Style style) {
   pw.Widget value(String text) =>
       pw.Center(child: pw.Text(text, style: style.value));
 
+  final l10n = style.l10n;
+  final format = style.format;
+  final time = order.scheduledTime;
+
   return _grid([
     [
-      _Cell.field('CEP', order.customerZip, style, flex: 2),
-      _Cell(flex: 2, child: header('Garantia')),
-      _Cell(flex: 2, child: header('Chamado')),
-      _Cell(flex: 2, child: header('Marcado p/')),
-      _Cell(flex: 2, child: header('Horário')),
-      _Cell(flex: 2, child: header('Instalado em')),
+      _Cell.field(l10n.zip, order.customerZip, style, flex: 2),
+      _Cell(flex: 2, child: header(l10n.warranty)),
+      _Cell(flex: 2, child: header(l10n.calledAt)),
+      _Cell(flex: 2, child: header(l10n.scheduledFor)),
+      _Cell(flex: 2, child: header(l10n.scheduledTime)),
+      _Cell(flex: 2, child: header(l10n.installedAt)),
     ],
     [
-      _Cell.field('N.F.', order.invoiceNumber, style, flex: 2),
-      _Cell(flex: 2, child: pw.Center(child: _yesNo(order.underWarranty))),
-      _Cell(flex: 2, child: value(formatDate(order.calledAt))),
-      _Cell(flex: 2, child: value(formatDate(order.scheduledFor))),
-      _Cell(flex: 2, child: value(order.scheduledTime ?? '')),
-      _Cell(flex: 2, child: value(formatDate(order.installedAt))),
+      _Cell.field(l10n.invoice, order.invoiceNumber, style, flex: 2),
+      _Cell(
+        flex: 2,
+        child: pw.Center(child: _yesNo(order.underWarranty, style)),
+      ),
+      _Cell(flex: 2, child: value(format.date(order.calledAt))),
+      _Cell(flex: 2, child: value(format.date(order.scheduledFor))),
+      _Cell(flex: 2, child: value(time == null ? '' : format.time(time))),
+      _Cell(flex: 2, child: value(format.date(order.installedAt))),
     ],
   ]);
 }
@@ -311,7 +336,7 @@ pw.Widget _servicesPerformed(ServiceOrder order, _Style style) {
     child: pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Serviços Executados', style: style.label),
+        pw.Text(style.l10n.pdfServicesPerformed, style: style.label),
         pw.SizedBox(height: 3),
         pw.Text(order.servicesPerformed, maxLines: 20),
       ],
@@ -358,8 +383,8 @@ pw.Widget _partsTable(ServiceOrder order, _Style style) {
           cell(item.quantity.toString().padLeft(2, '0'), align: pw.TextAlign.center),
           cell(item.code),
           cell(item.description),
-          cell(formatCents(item.unitPriceCents), align: pw.TextAlign.right),
-          cell(formatCents(item.totalCents), align: pw.TextAlign.right),
+          cell(style.format.amount(item.unitPriceCents), align: pw.TextAlign.right),
+          cell(style.format.amount(item.totalCents), align: pw.TextAlign.right),
         ],
       ),
     for (var i = order.items.length; i < _minPartRows; i++)
@@ -375,11 +400,11 @@ pw.Widget _partsTable(ServiceOrder order, _Style style) {
         repeat: true,
         decoration: pw.BoxDecoration(color: style.tableHeader),
         children: [
-          headerCell('Quant.'),
-          headerCell('Código'),
-          headerCell('NOME DA PEÇA'),
-          headerCell('Valor Unitário'),
-          headerCell('Valor Total'),
+          headerCell(style.l10n.quantityShort),
+          headerCell(style.l10n.code),
+          headerCell(style.l10n.pdfPartName),
+          headerCell(style.l10n.pdfUnitPrice),
+          headerCell(style.l10n.pdfLineTotal),
         ],
       ),
       ...rows,
@@ -414,7 +439,7 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
             child: pw.Container(
               alignment: pw.Alignment.centerRight,
               padding: const pw.EdgeInsets.symmetric(horizontal: 4),
-              child: pw.Text(formatCents(cents), style: textStyle),
+              child: pw.Text(style.format.amount(cents), style: textStyle),
             ),
           ),
         ],
@@ -446,7 +471,7 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Text('Observações:', style: style.label),
+                    pw.Text('${style.l10n.notes}:', style: style.label),
                     pw.SizedBox(height: 3),
                     pw.Text(order.notes, maxLines: 5),
                   ],
@@ -457,9 +482,13 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
               flex: totalsFlex,
               child: pw.Column(
                 children: [
-                  totalRow('TOTAL PÇ', order.partsTotalCents),
-                  totalRow('SERVIÇO', order.laborCents),
-                  totalRow('TOTAL', order.totalCents, emphasized: true),
+                  totalRow(style.l10n.pdfPartsTotal, order.partsTotalCents),
+                  totalRow(style.l10n.pdfLabor, order.laborCents),
+                  totalRow(
+                    style.l10n.total,
+                    order.totalCents,
+                    emphasized: true,
+                  ),
                 ],
               ),
             ),
@@ -478,7 +507,12 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
         children: [
           pw.TableRow(
             children: [
-              for (final label in ['VISTO', 'DATA', 'TÉCNICO', 'CLIENTE'])
+              for (final label in [
+                style.l10n.pdfSignatureApproval,
+                style.l10n.pdfSignatureDate,
+                style.l10n.pdfSignatureTechnician,
+                style.l10n.pdfSignatureCustomer,
+              ])
                 pw.Padding(
                   padding: const pw.EdgeInsets.all(3),
                   child: pw.Text(label, textAlign: pw.TextAlign.center),
@@ -496,13 +530,10 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
         child: pw.Row(
           children: [
             pw.Expanded(
-              child: pw.Text(
-                'O equipamento foi consertado e revisado, estando em perfeitas '
-                'condições de funcionamento',
-              ),
+              child: pw.Text(style.l10n.pdfEquipmentOk),
             ),
             pw.SizedBox(width: 8),
-            _yesNo(order.equipmentOk),
+            _yesNo(order.equipmentOk, style),
           ],
         ),
       ),
@@ -513,8 +544,8 @@ pw.Widget _closingBlock(ServiceOrder order, _Style style) {
 // ---------------------------------------------------------------------------
 // Building blocks
 
-/// "☐ Sim ☐ Não", drawn as boxes instead of font glyphs.
-pw.Widget _yesNo(bool? value) {
+/// "☐ Sim ☐ Não" / "☐ Yes ☐ No", drawn as boxes instead of font glyphs.
+pw.Widget _yesNo(bool? value, _Style style) {
   pw.Widget option(String label, bool checked) => pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
         children: [
@@ -538,9 +569,9 @@ pw.Widget _yesNo(bool? value) {
   return pw.Row(
     mainAxisSize: pw.MainAxisSize.min,
     children: [
-      option('Sim', value == true),
+      option(style.l10n.yes, value == true),
       pw.SizedBox(width: 8),
-      option('Não', value == false),
+      option(style.l10n.no, value == false),
     ],
   );
 }

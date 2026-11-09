@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
 import '../../core/formatting/formatters.dart';
+import '../../core/preferences/app_preferences.dart';
+import '../../l10n/app_localizations.dart';
 import '../document/service_order_preview_page.dart';
 import '../service_order/data/service_order.dart';
 import '../service_order/service_order_form_page.dart';
@@ -82,9 +84,11 @@ class HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Histórico'),
+        title: Text(l10n.navHistory),
         // "Criar" lives in the bottom bar (raised center button).
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
@@ -93,9 +97,9 @@ class HistoryPageState extends State<HistoryPage> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              decoration: const InputDecoration(
-                hintText: 'Buscar por cliente ou nº da OS',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: l10n.historySearchHint,
+                prefixIcon: const Icon(Icons.search),
               ),
             ),
           ),
@@ -113,7 +117,7 @@ class HistoryPageState extends State<HistoryPage> {
     if (orders.isEmpty) {
       return _searchController.text.trim().isEmpty
           ? const _EmptyHistory()
-          : const Center(child: Text('Nenhuma ordem de serviço encontrada'));
+          : Center(child: Text(AppLocalizations.of(context).historyNoResults));
     }
 
     // One group per day. The day header is pinned inside its group: it
@@ -155,10 +159,16 @@ class HistoryPageState extends State<HistoryPage> {
   List<({String label, List<ServiceOrder> orders})> _groupByDay(
     List<ServiceOrder> orders,
   ) {
+    final l10n = AppLocalizations.of(context);
     final groups = <({String label, List<ServiceOrder> orders})>[];
 
     for (final order in orders) {
-      final label = formatDayLabel(order.createdAt!);
+      final label = formatDayLabel(
+        order.createdAt!,
+        languageCode: l10n.localeName,
+        today: l10n.today,
+        yesterday: l10n.yesterday,
+      );
       if (groups.isEmpty || groups.last.label != label) {
         groups.add((label: label, orders: [order]));
       } else {
@@ -231,17 +241,19 @@ class _OrderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Everything here is a service order: the number alone is the title.
-    final number = order.orderNumber.isEmpty ? 'Sem número' : order.orderNumber;
+    final l10n = AppLocalizations.of(context);
+    final number =
+        order.orderNumber.isEmpty ? l10n.orderNoNumber : order.orderNumber;
     final customer =
-        order.customerName.isEmpty ? 'Cliente não informado' : order.customerName;
+        order.customerName.isEmpty ? l10n.customerNotInformed : order.customerName;
 
     // The day is in the section header; the tile shows the time.
     return ListTile(
       onTap: onTap,
       title: Text(number),
-      subtitle: Text('$customer · ${formatTime(order.createdAt!)}'),
+      subtitle: Text('$customer · ${context.format.timeOf(order.createdAt!)}'),
       trailing: Text(
-        'R\$ ${formatCents(order.totalCents)}',
+        context.format.money(order.totalCents),
         style: Theme.of(context).textTheme.titleSmall,
       ),
     );
@@ -254,6 +266,7 @@ class _EmptyHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Center(
       child: Padding(
@@ -268,12 +281,12 @@ class _EmptyHistory extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Nenhuma ordem de serviço emitida ainda',
+              l10n.historyEmptyTitle,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Toque em "Criar" para emitir a primeira ordem de serviço.',
+              l10n.historyEmptyBody,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),

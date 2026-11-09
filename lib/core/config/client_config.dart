@@ -1,5 +1,7 @@
 import 'package:flutter/painting.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Branding and company data for the client this build belongs to.
 ///
 /// Values are injected at build time from `clients/<folder>/config.json`
@@ -16,6 +18,7 @@ class ClientConfig {
     required this.companyResponsible,
     required this.brandColor,
     required this.logoAsset,
+    this.sampleCompany = false,
   });
 
   factory ClientConfig.fromEnvironment() {
@@ -35,6 +38,7 @@ class ClientConfig {
       companyResponsible: const String.fromEnvironment('COMPANY_RESPONSIBLE'),
       brandColor: Color(int.parse(brandColorHex, radix: 16)),
       logoAsset: const String.fromEnvironment('LOGO_ASSET'),
+      sampleCompany: const bool.fromEnvironment('SAMPLE_COMPANY'),
     );
   }
 
@@ -48,10 +52,37 @@ class ClientConfig {
   final String companyState;
   final String companyResponsible;
   final Color brandColor;
+
   /// Empty when the build ships without a logo (the generic app); the user
   /// can still add one in the app.
   final String logoAsset;
 
+  /// The generic app ships an example company instead of real data. Its
+  /// texts come from the translations, so they follow the app language.
+  final bool sampleCompany;
+
   /// False when the app was started without `--dart-define-from-file`.
-  bool get isConfigured => companyName.isNotEmpty;
+  bool get isConfigured => companyName.isNotEmpty || sampleCompany;
+
+  /// Company defaults to show and print: for the example company, the empty
+  /// fields are filled with the example in the language of [l10n]. Real
+  /// client data (and fields left empty on purpose) are kept as they are.
+  ClientConfig localized(AppLocalizations l10n) {
+    if (!sampleCompany) return this;
+
+    String pick(String value, String sample) => value.isEmpty ? sample : value;
+    return ClientConfig(
+      channel: channel,
+      companyName: pick(companyName, l10n.sampleCompanyName),
+      companyDocument: pick(companyDocument, l10n.sampleCompanyDocument),
+      companyPhone: pick(companyPhone, l10n.sampleCompanyPhone),
+      companyAddress: pick(companyAddress, l10n.sampleCompanyAddress),
+      companyCity: pick(companyCity, l10n.sampleCompanyCity),
+      companyState: pick(companyState, l10n.sampleCompanyState),
+      companyResponsible: pick(companyResponsible, l10n.sampleResponsible),
+      brandColor: brandColor,
+      logoAsset: logoAsset,
+      sampleCompany: true,
+    );
+  }
 }

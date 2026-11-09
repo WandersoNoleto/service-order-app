@@ -4,6 +4,7 @@ import '../features/history/history_page.dart';
 import '../features/settings/settings_page.dart';
 import '../features/update/update_checker.dart';
 import '../features/update/update_prompt.dart';
+import '../l10n/app_localizations.dart';
 import 'app_dependencies.dart';
 import 'brand_bottom_bar.dart';
 
@@ -53,6 +54,8 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -66,20 +69,20 @@ class _HomeShellState extends State<HomeShell> {
         onSelected: (index) => setState(() => _currentIndex = index),
         centerAction: BrandBottomBarAction(
           icon: Icons.add,
-          label: 'Criar',
-          semanticLabel: 'Criar ordem de serviço',
+          label: l10n.navCreate,
+          semanticLabel: l10n.navCreateSemantic,
           onPressed: _createOrder,
         ),
-        items: const [
+        items: [
           BrandBottomBarItem(
             icon: Icons.receipt_long_outlined,
             selectedIcon: Icons.receipt_long,
-            label: 'Histórico',
+            label: l10n.navHistory,
           ),
           BrandBottomBarItem(
             icon: Icons.settings_outlined,
             selectedIcon: Icons.settings,
-            label: 'Configurações',
+            label: l10n.navSettings,
           ),
         ],
       ),

@@ -7,7 +7,9 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/formatting/region_format.dart';
 import '../../core/storage/logo_storage.dart';
+import '../../l10n/app_localizations.dart';
 import '../service_order/data/service_order.dart';
 import '../settings/data/company_profile.dart';
 import 'pdf_assets.dart';
@@ -29,8 +31,14 @@ class ServiceOrderDocuments {
   static const imageDpi = 200.0;
 
   /// Uses the company data as it is now (edited values or build defaults).
-  /// A custom logo that went missing falls back to the bundled one.
-  Future<Uint8List> buildPdf(ServiceOrder order, CompanyProfile company) async {
+  /// A custom logo that went missing falls back to the bundled one. Labels
+  /// follow the app language ([l10n]); money and dates follow [format].
+  Future<Uint8List> buildPdf(
+    ServiceOrder order,
+    CompanyProfile company, {
+    required AppLocalizations l10n,
+    required RegionFormat format,
+  }) async {
     _fonts ??= await PdfAssets.loadFonts();
     final logo = await PdfAssets.loadLogo(
       customFile: await _logos.resolve(company.customLogoFile),
@@ -41,6 +49,8 @@ class ServiceOrderDocuments {
       order: order,
       company: company,
       assets: _fonts!.withLogo(logo),
+      l10n: l10n,
+      format: format,
     );
   }
 
@@ -53,15 +63,25 @@ class ServiceOrderDocuments {
     return pages;
   }
 
-  Future<void> sharePdf(ServiceOrder order, Uint8List pdf) async {
-    final file = await _writeTemp('${fileBaseName(order)}.pdf', pdf);
+  /// [prefix] starts the file name ("OS" / "SO", from the app language).
+  Future<void> sharePdf(
+    ServiceOrder order,
+    Uint8List pdf, {
+    String prefix = 'OS',
+  }) async {
+    final file =
+        await _writeTemp('${fileBaseName(order, prefix: prefix)}.pdf', pdf);
     await SharePlus.instance.share(
       ShareParams(files: [XFile(file.path, mimeType: 'application/pdf')]),
     );
   }
 
-  Future<void> shareImages(ServiceOrder order, List<Uint8List> pages) async {
-    final base = fileBaseName(order);
+  Future<void> shareImages(
+    ServiceOrder order,
+    List<Uint8List> pages, {
+    String prefix = 'OS',
+  }) async {
+    final base = fileBaseName(order, prefix: prefix);
     final files = <XFile>[];
     for (final (index, png) in pages.indexed) {
       final name = pages.length == 1 ? '$base.png' : '${base}_${index + 1}.png';
@@ -72,10 +92,14 @@ class ServiceOrderDocuments {
   }
 
   /// Opens the Android print dialog.
-  Future<void> printPdf(ServiceOrder order, Uint8List pdf) {
+  Future<void> printPdf(
+    ServiceOrder order,
+    Uint8List pdf, {
+    String prefix = 'OS',
+  }) {
     return Printing.layoutPdf(
       onLayout: (_) async => pdf,
-      name: fileBaseName(order),
+      name: fileBaseName(order, prefix: prefix),
       format: PdfPageFormat.a4,
     );
   }
@@ -88,9 +112,13 @@ class ServiceOrderDocuments {
 }
 
 /// "OS_0001_Clinica_Sorriso" — ASCII only, safe for any app receiving it.
-String fileBaseName(ServiceOrder order) {
+String fileBaseName(ServiceOrder order, {String prefix = 'OS'}) {
   final number = order.orderNumber.isNotEmpty ? order.orderNumber : '${order.id}';
-  final parts = ['OS', number, if (order.customerName.isNotEmpty) order.customerName];
+  final parts = [
+    prefix,
+    number,
+    if (order.customerName.isNotEmpty) order.customerName,
+  ];
   return _slug(parts.join('_'));
 }
 

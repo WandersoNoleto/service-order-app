@@ -23,13 +23,20 @@ class AvailableUpdate {
   final Uri apkUrl;
 }
 
+/// GitHub couldn't be read. The screen turns it into a translated message:
+/// [statusCode] is null when there was no connection at all.
 class UpdateCheckException implements Exception {
-  const UpdateCheckException(this.message);
+  const UpdateCheckException({this.statusCode, this.cause});
 
-  final String message;
+  final int? statusCode;
+  final Object? cause;
+
+  bool get isOffline => statusCode == null;
 
   @override
-  String toString() => message;
+  String toString() => isOffline
+      ? 'Update server unreachable ($cause)'
+      : 'Update server answered $statusCode';
 }
 
 /// Looks for a newer release on GitHub Releases.
@@ -68,13 +75,11 @@ class UpdateChecker {
           )
           .timeout(const Duration(seconds: 15));
     } on Exception catch (error) {
-      throw UpdateCheckException('Sem conexão com o servidor de atualizações ($error)');
+      throw UpdateCheckException(cause: error);
     }
 
     if (response.statusCode != 200) {
-      throw UpdateCheckException(
-        'Servidor de atualizações respondeu ${response.statusCode}',
-      );
+      throw UpdateCheckException(statusCode: response.statusCode);
     }
 
     final releases = jsonDecode(response.body) as List<dynamic>;

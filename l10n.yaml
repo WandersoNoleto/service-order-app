@@ -1,0 +1,7 @@
+# Translations (gen-l10n). Portuguese is the template; add a key there first,
+# then in every other app_<lang>.arb. Generated on build (flutter: generate).
+arb-dir: lib/l10n
+template-arb-file: app_pt.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

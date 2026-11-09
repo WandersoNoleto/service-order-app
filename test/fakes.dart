@@ -5,6 +5,8 @@ import 'package:flutter/painting.dart';
 
 import 'package:service_order_app/app/app_dependencies.dart';
 import 'package:service_order_app/core/config/client_config.dart';
+import 'package:service_order_app/core/formatting/region_format.dart';
+import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/core/storage/logo_storage.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
@@ -13,29 +15,47 @@ import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/settings/data/settings_repository.dart';
 import 'package:service_order_app/features/update/update_checker.dart';
 import 'package:service_order_app/features/update/update_installer.dart';
+import 'package:service_order_app/l10n/app_localizations.dart';
 
 /// In-memory repositories for widget tests (real SQLite is covered by the
 /// repository tests).
-AppDependencies fakeDependencies({String responsible = 'Fulano de Tal'}) {
+/// Portuguese with Brazilian formats unless told otherwise, so the existing
+/// widget tests keep reading Portuguese texts.
+///
+/// [sampleCompany] builds the generic app's example company (translated)
+/// instead of the fixed "Empresa Teste".
+AppDependencies fakeDependencies({
+  String responsible = 'Fulano de Tal',
+  LanguagePreference language = LanguagePreference.portuguese,
+  RegionPreference region = RegionPreference.brazil,
+  bool sampleCompany = false,
+}) {
+  final settings = FakeSettingsRepository();
   return AppDependencies(
     config: ClientConfig(
       channel: '',
-      companyName: 'Empresa Teste',
+      companyName: sampleCompany ? '' : 'Empresa Teste',
       companyDocument: '',
       companyPhone: '',
       companyAddress: '',
       companyCity: '',
       companyState: '',
-      companyResponsible: responsible,
+      companyResponsible: sampleCompany ? '' : responsible,
       brandColor: const Color(0xFF1B1B1B),
       logoAsset: '',
+      sampleCompany: sampleCompany,
     ),
     orders: FakeServiceOrderRepository(),
-    settings: FakeSettingsRepository(),
+    settings: settings,
     documents: FakeServiceOrderDocuments(),
     logos: FakeLogoStorage(),
     updates: FakeUpdateChecker(),
     installer: FakeUpdateInstaller(),
+    preferences: AppPreferences.fixed(
+      settings,
+      language: language,
+      region: region,
+    ),
   );
 }
 
@@ -48,9 +68,18 @@ class FakeServiceOrderDocuments implements ServiceOrderDocuments {
   /// Company profile used for each PDF built.
   final builtFor = <CompanyProfile>[];
 
+  /// Language of each PDF built (its "Ordem de Serviço" / "Service Order").
+  final builtInLanguage = <String>[];
+
   @override
-  Future<Uint8List> buildPdf(ServiceOrder order, CompanyProfile company) async {
+  Future<Uint8List> buildPdf(
+    ServiceOrder order,
+    CompanyProfile company, {
+    required AppLocalizations l10n,
+    required RegionFormat format,
+  }) async {
     builtFor.add(company);
+    builtInLanguage.add(l10n.localeName);
     return Uint8List(0);
   }
 
@@ -58,15 +87,27 @@ class FakeServiceOrderDocuments implements ServiceOrderDocuments {
   Future<List<Uint8List>> renderPages(Uint8List pdf) async => [];
 
   @override
-  Future<void> sharePdf(ServiceOrder order, Uint8List pdf) async =>
+  Future<void> sharePdf(
+    ServiceOrder order,
+    Uint8List pdf, {
+    String prefix = 'OS',
+  }) async =>
       sharedPdfs.add(order);
 
   @override
-  Future<void> shareImages(ServiceOrder order, List<Uint8List> pages) async =>
+  Future<void> shareImages(
+    ServiceOrder order,
+    List<Uint8List> pages, {
+    String prefix = 'OS',
+  }) async =>
       sharedImages.add(order);
 
   @override
-  Future<void> printPdf(ServiceOrder order, Uint8List pdf) async =>
+  Future<void> printPdf(
+    ServiceOrder order,
+    Uint8List pdf, {
+    String prefix = 'OS',
+  }) async =>
       printed.add(order);
 }
 
@@ -158,6 +199,20 @@ class FakeSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> setCustomLogoFile(String? fileName) async => _logoFile = fileName;
+
+  final _preferences = <String, String>{};
+
+  @override
+  Future<String?> preference(String key) async => _preferences[key];
+
+  @override
+  Future<void> setPreference(String key, String? value) async {
+    if (value == null) {
+      _preferences.remove(key);
+    } else {
+      _preferences[key] = value;
+    }
+  }
 
   @override
   Future<void> resetCompany() async {

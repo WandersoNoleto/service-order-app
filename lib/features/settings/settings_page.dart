@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../core/formatting/region_format.dart';
+import '../../core/preferences/app_preferences.dart';
+import '../../l10n/app_localizations.dart';
 import '../update/update_checker.dart';
 import '../update/update_prompt.dart';
 import 'company_form_page.dart';
@@ -19,16 +22,24 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   CompanyProfile? _profile;
 
+  /// Language of the loaded profile: the example company is translated, so
+  /// it is reloaded when the language changes.
+  Locale? _loadedLocale;
+
   AppDependencies get _deps => widget.dependencies;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = PreferencesScope.of(context).locale;
+    if (locale != _loadedLocale) {
+      _loadedLocale = locale;
+      _load();
+    }
   }
 
   Future<void> _load() async {
-    final profile = await _deps.settings.companyProfile(_deps.config);
+    final profile = await _deps.settings.companyProfile(_deps.companyDefaults);
     if (!mounted) return;
     setState(() => _profile = profile);
   }
@@ -47,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final profile = _profile;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).navSettings)),
       body: profile == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -59,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   dependencies: _deps,
                   onEdit: _edit,
                 ),
+                const _LanguageAndFormatCard(),
                 _AboutCard(dependencies: _deps),
               ],
             ),
@@ -66,7 +78,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-/// Summary of the company data used on every OS.
+/// Summary of the company data used on every service order.
 class _CompanyCard extends StatelessWidget {
   const _CompanyCard({
     required this.profile,
@@ -81,17 +93,18 @@ class _CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final cityState = [profile.companyCity, profile.companyState]
         .where((part) => part.isNotEmpty)
         .join(' - ');
 
     final rows = [
-      ('Nome', profile.companyName),
-      ('CNPJ', profile.companyDocument),
-      ('Telefone', profile.companyPhone),
-      ('Endereço', profile.companyAddress),
-      ('Cidade', cityState),
-      ('Responsável', profile.responsibleName),
+      (l10n.rowName, profile.companyName),
+      (l10n.rowDocument, profile.companyDocument),
+      (l10n.rowPhone, profile.companyPhone),
+      (l10n.rowAddress, profile.companyAddress),
+      (l10n.rowCity, cityState),
+      (l10n.rowResponsible, profile.responsibleName),
     ];
 
     return Card(
@@ -103,12 +116,15 @@ class _CompanyCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text('Empresa', style: theme.textTheme.titleLarge),
+                  child: Text(
+                    l10n.companyCardTitle,
+                    style: theme.textTheme.titleLarge,
+                  ),
                 ),
                 FilledButton.tonalIcon(
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Editar'),
+                  label: Text(l10n.edit),
                 ),
               ],
             ),
@@ -128,7 +144,7 @@ class _CompanyCard extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             Text(
-              'Estes dados aparecem no cabeçalho de todas as ordens de serviço.',
+              l10n.companyCardFooter,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
@@ -180,6 +196,115 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+/// Language and regional format, chosen independently (e.g. English with
+/// Brazilian formats). Both default to the phone settings.
+class _LanguageAndFormatCard extends StatelessWidget {
+  const _LanguageAndFormatCard();
+
+  /// Sample of a regional format: "R$ 1.234,56 · 25/10/2026".
+  static String _sample(RegionFormat format) =>
+      '${format.money(123456)} · ${format.date(DateTime(2026, 10, 25))}';
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final preferences = PreferencesScope.of(context);
+
+    final languages = {
+      LanguagePreference.system: l10n.languageSystem,
+      LanguagePreference.portuguese: l10n.languagePortuguese,
+      LanguagePreference.english: l10n.languageEnglish,
+    };
+    final regions = {
+      RegionPreference.system: l10n.regionSystem,
+      RegionPreference.brazil:
+          '${l10n.regionBrazil} (${_sample(RegionFormat.brazil)})',
+      RegionPreference.unitedStates:
+          '${l10n.regionUnitedStates} (${_sample(RegionFormat.unitedStates)})',
+    };
+
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Text(
+              l10n.languageAndFormat,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.translate),
+            title: Text(l10n.language),
+            subtitle: Text(languages[preferences.language]!),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final choice = await _choose(
+                context,
+                title: l10n.language,
+                options: languages,
+                current: preferences.language,
+              );
+              if (choice != null) await preferences.setLanguage(choice);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.payments_outlined),
+            title: Text(l10n.region),
+            subtitle: Text(
+              '${regions[preferences.region]!}\n${l10n.regionHint}',
+            ),
+            isThreeLine: true,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final choice = await _choose(
+                context,
+                title: l10n.region,
+                options: regions,
+                current: preferences.region,
+              );
+              if (choice != null) await preferences.setRegion(choice);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  /// Single-choice dialog; null when dismissed.
+  static Future<T?> _choose<T>(
+    BuildContext context, {
+    required String title,
+    required Map<T, String> options,
+    required T current,
+  }) {
+    return showDialog<T>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(title),
+        children: [
+          for (final MapEntry(key: value, value: label) in options.entries)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(value),
+              child: Row(
+                children: [
+                  Expanded(child: Text(label)),
+                  if (value == current)
+                    Icon(
+                      Icons.check,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Installed version and the manual "check for updates".
 class _AboutCard extends StatefulWidget {
   const _AboutCard({required this.dependencies});
@@ -198,20 +323,21 @@ class _AboutCardState extends State<_AboutCard> {
   Future<void> _check() async {
     final deps = widget.dependencies;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     setState(() => _checking = true);
 
     try {
       final update = await deps.updates.check();
       if (!mounted) return;
       if (update == null) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Você já está na versão mais recente.')),
-        );
+        messenger.showSnackBar(SnackBar(content: Text(l10n.upToDate)));
       } else {
         await showUpdateDialog(context, update: update, installer: deps.installer);
       }
     } on UpdateCheckException catch (error) {
-      messenger.showSnackBar(SnackBar(content: Text(error.message)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(updateCheckErrorMessage(l10n, error))),
+      );
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -219,16 +345,20 @@ class _AboutCardState extends State<_AboutCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: ListTile(
         leading: const Icon(Icons.system_update_outlined),
         title: FutureBuilder<InstalledVersion>(
           future: _installed,
           builder: (_, snapshot) => Text(
-            snapshot.hasData ? 'Versão ${snapshot.data!.name}' : 'Versão',
+            snapshot.hasData
+                ? l10n.versionLabel(snapshot.data!.name)
+                : l10n.version,
           ),
         ),
-        subtitle: const Text('Verificar atualizações'),
+        subtitle: Text(l10n.checkForUpdates),
         trailing: _checking
             ? const SizedBox.square(
                 dimension: 20,
@@ -253,8 +383,7 @@ class _NotConfiguredWarning extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          'App iniciado sem configuração de cliente. '
-          'Rode com --dart-define-from-file=clients/<pasta>/config.json.',
+          AppLocalizations.of(context).notConfigured,
           style: TextStyle(color: colors.onErrorContainer),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../l10n/app_localizations.dart';
 import 'data/company_profile.dart';
 import 'widgets/company_logo.dart';
 
@@ -52,16 +53,16 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
     final discard = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Descartar alterações?'),
-        content: const Text('O que você alterou não foi salvo.'),
+        title: Text(AppLocalizations.of(context).discardChangesTitle),
+        content: Text(AppLocalizations.of(context).discardCompanyMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Descartar'),
+            child: Text(AppLocalizations.of(context).discard),
           ),
         ],
       ),
@@ -84,7 +85,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
     } on Exception catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível carregar a imagem: $error')),
+        SnackBar(content: Text(AppLocalizations.of(context).couldNotLoadImage('$error'))),
       );
     }
   }
@@ -93,7 +94,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
-    await _deps.settings.saveCompanyFields(_deps.config, {
+    await _deps.settings.saveCompanyFields(_deps.companyDefaults, {
       for (final MapEntry(key: field, value: controller) in _controllers.entries)
         field: controller.text,
     });
@@ -110,18 +111,16 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Restaurar tudo?'),
-        content: const Text(
-          'Todos os dados e a logo voltam ao que veio configurado no app.',
-        ),
+        title: Text(AppLocalizations.of(context).restoreAllTitle),
+        content: Text(AppLocalizations.of(context).restoreAllMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Restaurar'),
+            child: Text(AppLocalizations.of(context).restore),
           ),
         ],
       ),
@@ -147,16 +146,16 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   Widget _buildScaffold() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dados da empresa'),
+        title: Text(AppLocalizations.of(context).companyFormTitle),
         actions: [
           PopupMenuButton<_MenuAction>(
             onSelected: (action) => switch (action) {
               _MenuAction.resetAll => _resetAll(),
             },
-            itemBuilder: (_) => const [
+            itemBuilder: (_) => [
               PopupMenuItem(
                 value: _MenuAction.resetAll,
-                child: Text('Restaurar tudo para o padrão'),
+                child: Text(AppLocalizations.of(context).restoreAllDefaults),
               ),
             ],
           ),
@@ -179,27 +178,27 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
             const SizedBox(height: 16),
             _field(
               CompanyField.name,
-              'Nome da empresa',
+              AppLocalizations.of(context).companyNameField,
               validator: (text) => (text ?? '').trim().isEmpty
-                  ? 'Informe o nome da empresa'
+                  ? AppLocalizations.of(context).companyNameRequired
                   : null,
             ),
-            _field(CompanyField.document, 'CNPJ'),
+            _field(CompanyField.document, AppLocalizations.of(context).companyDocumentField),
             _field(
               CompanyField.phone,
-              'Telefone / WhatsApp',
+              AppLocalizations.of(context).phoneWhatsapp,
               keyboard: TextInputType.phone,
             ),
-            _field(CompanyField.address, 'Endereço'),
+            _field(CompanyField.address, AppLocalizations.of(context).address),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               spacing: 12,
               children: [
-                Expanded(flex: 3, child: _field(CompanyField.city, 'Cidade')),
-                Expanded(child: _field(CompanyField.state, 'UF')),
+                Expanded(flex: 3, child: _field(CompanyField.city, AppLocalizations.of(context).city)),
+                Expanded(child: _field(CompanyField.state, AppLocalizations.of(context).stateShort)),
               ],
             ),
-            _field(CompanyField.responsible, 'Responsável'),
+            _field(CompanyField.responsible, AppLocalizations.of(context).responsible),
           ],
         ),
       ),
@@ -209,7 +208,7 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
           child: FilledButton.icon(
             onPressed: _saving ? null : _save,
             icon: const Icon(Icons.save_outlined),
-            label: Text(_saving ? 'Salvando…' : 'Salvar'),
+            label: Text(_saving ? AppLocalizations.of(context).saving : AppLocalizations.of(context).save),
           ),
         ),
       ),
@@ -238,11 +237,13 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
         decoration: InputDecoration(
           labelText: label,
           helperText: changed
-              ? 'Padrão: ${defaultValue.isEmpty ? '(vazio)' : defaultValue}'
+              ? AppLocalizations.of(context).defaultValue(
+                  defaultValue.isEmpty ? AppLocalizations.of(context).emptyValue : defaultValue,
+                )
               : null,
           suffixIcon: changed
               ? IconButton(
-                  tooltip: 'Restaurar padrão',
+                  tooltip: AppLocalizations.of(context).restoreDefault,
                   icon: const Icon(Icons.restore),
                   onPressed: () => controller.text = defaultValue,
                 )
@@ -279,12 +280,12 @@ class _LogoSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 12,
           children: [
-            Text('Logo', style: Theme.of(context).textTheme.titleMedium),
+            Text(AppLocalizations.of(context).logo, style: Theme.of(context).textTheme.titleMedium),
             CompanyLogo(
               logos: dependencies.logos,
               customLogoFile: logoFile,
               fallbackAsset: fallbackAsset,
-              emptyLabel: 'Nenhuma logo cadastrada',
+              emptyLabel: AppLocalizations.of(context).noLogo,
             ),
             Wrap(
               spacing: 8,
@@ -293,14 +294,14 @@ class _LogoSection extends StatelessWidget {
                 FilledButton.tonalIcon(
                   onPressed: onPick,
                   icon: const Icon(Icons.image_outlined),
-                  label: const Text('Trocar logo'),
+                  label: Text(AppLocalizations.of(context).changeLogo),
                 ),
                 if (onRestore != null)
                   TextButton.icon(
                     onPressed: onRestore,
                     icon: const Icon(Icons.restore),
                     label: Text(
-                      fallbackAsset.isEmpty ? 'Remover logo' : 'Usar logo padrão',
+                      fallbackAsset.isEmpty ? AppLocalizations.of(context).removeLogo : AppLocalizations.of(context).useDefaultLogo,
                     ),
                   ),
               ],

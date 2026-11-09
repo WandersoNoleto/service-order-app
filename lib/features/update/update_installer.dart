@@ -19,10 +19,16 @@ class InstallerOpened extends InstallProgress {
   const InstallerOpened();
 }
 
-class InstallFailed extends InstallProgress {
-  const InstallFailed(this.message);
+/// Why an update could not be installed; the screen picks the message.
+enum InstallFailure { permission, download, canceled, alreadyRunning, other }
 
-  final String message;
+class InstallFailed extends InstallProgress {
+  const InstallFailed(this.reason, {this.detail});
+
+  final InstallFailure reason;
+
+  /// Technical detail for [InstallFailure.other].
+  final String? detail;
 }
 
 /// Downloads the update and opens the Android installer.
@@ -45,18 +51,13 @@ class UpdateInstaller {
       OtaStatus.INSTALLING ||
       OtaStatus.INSTALLATION_DONE =>
         const InstallerOpened(),
-      OtaStatus.PERMISSION_NOT_GRANTED_ERROR => const InstallFailed(
-          'Permita que este app instale atualizações: Configurações do '
-          'Android > Apps > Ordens de Serviço > Instalar apps desconhecidos. '
-          'Depois tente de novo.',
-        ),
-      OtaStatus.DOWNLOAD_ERROR => const InstallFailed(
-          'Falha ao baixar a atualização. Verifique a internet e tente de novo.',
-        ),
-      OtaStatus.CANCELED => const InstallFailed('Atualização cancelada.'),
+      OtaStatus.PERMISSION_NOT_GRANTED_ERROR =>
+        const InstallFailed(InstallFailure.permission),
+      OtaStatus.DOWNLOAD_ERROR => const InstallFailed(InstallFailure.download),
+      OtaStatus.CANCELED => const InstallFailed(InstallFailure.canceled),
       OtaStatus.ALREADY_RUNNING_ERROR =>
-        const InstallFailed('Uma atualização já está em andamento.'),
-      _ => InstallFailed('Erro ao instalar a atualização (${event.value}).'),
+        const InstallFailed(InstallFailure.alreadyRunning),
+      _ => InstallFailed(InstallFailure.other, detail: event.value),
     };
   }
 }
