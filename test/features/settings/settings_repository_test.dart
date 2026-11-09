@@ -9,16 +9,16 @@ import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/settings/data/settings_repository.dart';
 
 const _defaults = ClientConfig(
-  channel: 'val',
-  companyName: 'AC Serviços',
-  companyDocument: '35.183.961/0001-63',
-  companyPhone: '(99) 98456-4555',
-  companyAddress: 'Rua Sá Sobrinho, 26 - Centro',
-  companyCity: 'São João dos Patos',
-  companyState: 'MA',
-  companyResponsible: 'Valdejane',
-  brandColor: Color(0xFF1F5FBF),
-  logoAsset: 'clients/private/val/branding/logo.jpeg',
+  channel: '',
+  companyName: 'Oficina Exemplo',
+  companyDocument: '00.000.000/0001-00',
+  companyPhone: '(00) 00000-0000',
+  companyAddress: 'Rua Exemplo, 100 - Centro',
+  companyCity: 'Cidade Exemplo',
+  companyState: 'UF',
+  companyResponsible: 'Fulano de Tal',
+  brandColor: Color(0xFF508D6B),
+  logoAsset: '',
 );
 
 void main() {
@@ -40,9 +40,9 @@ void main() {
   test('without edits, the profile is the build config', () async {
     final profile = await repository.companyProfile(_defaults);
 
-    expect(profile.companyName, 'AC Serviços');
-    expect(profile.companyPhone, '(99) 98456-4555');
-    expect(profile.responsibleName, 'Valdejane');
+    expect(profile.companyName, 'Oficina Exemplo');
+    expect(profile.companyPhone, '(00) 00000-0000');
+    expect(profile.responsibleName, 'Fulano de Tal');
     expect(profile.overrides, isEmpty);
     expect(profile.hasCustomLogo, isFalse);
   });
@@ -51,14 +51,14 @@ void main() {
       () async {
     await repository.saveCompanyFields(_defaults, {
       CompanyField.phone: ' (99) 99999-0000 ',
-      CompanyField.responsible: 'Valdejane Souza',
+      CompanyField.responsible: 'Fulano Souza',
     });
 
     final profile = await repository.companyProfile(_defaults);
     expect(profile.companyPhone, '(99) 99999-0000');
-    expect(profile.responsibleName, 'Valdejane Souza');
+    expect(profile.responsibleName, 'Fulano Souza');
     expect(profile.isCustomized(CompanyField.phone), isTrue);
-    expect(profile.companyName, 'AC Serviços');
+    expect(profile.companyName, 'Oficina Exemplo');
     expect(profile.isCustomized(CompanyField.name), isFalse);
   });
 
@@ -66,7 +66,7 @@ void main() {
     await repository.saveCompanyFields(_defaults, {CompanyField.city: 'Floriano'});
     await repository.saveCompanyFields(
       _defaults,
-      {CompanyField.city: 'São João dos Patos'},
+      {CompanyField.city: 'Cidade Exemplo'},
     );
 
     final profile = await repository.companyProfile(_defaults);
@@ -84,11 +84,11 @@ void main() {
   test('responsible name saved by the previous version is kept', () async {
     await database.db.insert('app_settings', {
       'key': 'responsible_name',
-      'value': 'Valdejane Silva',
+      'value': 'Fulano Silva',
     });
 
     final profile = await repository.companyProfile(_defaults);
-    expect(profile.responsibleName, 'Valdejane Silva');
+    expect(profile.responsibleName, 'Fulano Silva');
   });
 
   test('custom logo is stored and can be removed', () async {

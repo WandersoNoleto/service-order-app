@@ -112,15 +112,16 @@ class _CompanyCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            // Takes no space when there is no logo.
             CompanyLogo(
               logos: dependencies.logos,
               customLogoFile: profile.customLogoFile,
               fallbackAsset: profile.defaultLogoAsset,
               height: 110,
               alignment: Alignment.center,
+              padding: const EdgeInsets.only(top: 20),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
             for (final (index, (label, value)) in rows.indexed) ...[
               if (index > 0) const Divider(height: 1),
               _InfoRow(label: label, value: value),

@@ -13,7 +13,7 @@ class PdfAssets {
   final pw.Font regular;
   final pw.Font bold;
 
-  /// Null when there is no logo at all; the header then shows the name.
+  /// Null when there is no logo at all; the header space then stays blank.
   final pw.ImageProvider? logo;
 
   PdfAssets withLogo(pw.ImageProvider? logo) =>

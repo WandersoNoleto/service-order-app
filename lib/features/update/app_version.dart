@@ -1,6 +1,6 @@
 /// A release version as published on GitHub.
 ///
-/// Tags: `v1.2.3` (generic channel) or `v1.2.3-val.4` (client channel "val").
+/// Tags: `v1.2.3` (generic channel) or `v1.2.3-acme.4` (client channel "acme").
 /// [code] follows the same formula as tool/build_release.sh, so it can be
 /// compared with the installed app's versionCode.
 class AppVersion implements Comparable<AppVersion> {

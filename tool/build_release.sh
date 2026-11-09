@@ -2,8 +2,11 @@
 # Builds a signed release APK for one flavor, ready to attach to a GitHub
 # release. The version comes from pubspec.yaml (`version: 1.0.1+1000100`).
 #
-#   tool/build_release.sh standard      -> tag v1.0.1        (generic)
-#   tool/build_release.sh val 2         -> tag v1.0.1-val.2  (client)
+#   tool/build_release.sh standard      -> tag v1.0.1         (generic app)
+#   tool/build_release.sh acme 2        -> tag v1.0.1-acme.2  (client "acme")
+#
+# A client flavor needs clients/private/<flavor>/config.json and its flavor
+# in android/app/build.gradle.kts (see README.md).
 #
 # versionCode = major*1000000 + minor*10000 + patch*100 + build, so it always
 # grows (Android refuses updates with a lower or equal versionCode). The
@@ -12,7 +15,7 @@ set -euo pipefail
 
 usage() {
   echo "usage: $0 standard" >&2
-  echo "       $0 val <build 1-99>" >&2
+  echo "       $0 <client-flavor> <build 1-99>" >&2
   exit 1
 }
 
@@ -41,13 +44,15 @@ case $flavor in
     config=clients/default/config.json
     tag="v$version"
     ;;
-  val)
+  *)
+    [[ $flavor =~ ^[a-z][a-z0-9]*$ ]] ||
+      { echo "client flavor must be lowercase letters/digits (got '$flavor')" >&2; exit 1; }
     [[ $build =~ ^[0-9]+$ && $build -ge 1 && $build -le 99 ]] ||
-      { echo "val builds need a build number from 1 to 99" >&2; exit 1; }
-    config=clients/private/val/config.json
-    tag="v$version-val.$build"
+      { echo "client builds need a build number from 1 to 99" >&2; exit 1; }
+    config=clients/private/$flavor/config.json
+    [[ -f $config ]] || { echo "$config not found" >&2; exit 1; }
+    tag="v$version-$flavor.$build"
     ;;
-  *) usage ;;
 esac
 
 [[ -f android/key.properties ]] ||

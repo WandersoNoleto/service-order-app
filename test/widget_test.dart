@@ -24,7 +24,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Valdejane'), findsOneWidget);
+    expect(find.text('Fulano de Tal'), findsOneWidget);
   });
 
   testWidgets('history is split in sections by day', (tester) async {
@@ -288,16 +288,16 @@ void main() {
           .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
           .first,
     );
-    await tester.enterText(responsible, 'Valdejane Souza');
+    await tester.enterText(responsible, 'Fulano Souza');
     await tester.pump();
-    expect(find.text('Padrão: Valdejane'), findsOneWidget);
+    expect(find.text('Padrão: Fulano de Tal'), findsOneWidget);
 
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dados da empresa'), findsNothing);
     expect(find.text('(99) 91234-5678'), findsOneWidget);
-    expect(find.text('Valdejane Souza'), findsOneWidget);
+    expect(find.text('Fulano Souza'), findsOneWidget);
   });
 
   testWidgets('company name is required', (tester) async {
@@ -338,7 +338,7 @@ void main() {
 
     await tester.tap(find.text('Trocar logo'));
     await tester.pumpAndSettle();
-    expect(find.text('Usar logo padrão'), findsOneWidget);
+    expect(find.text('Remover logo'), findsOneWidget);
 
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();

@@ -284,6 +284,7 @@ class _LogoSection extends StatelessWidget {
               logos: dependencies.logos,
               customLogoFile: logoFile,
               fallbackAsset: fallbackAsset,
+              emptyLabel: 'Nenhuma logo cadastrada',
             ),
             Wrap(
               spacing: 8,
@@ -298,7 +299,9 @@ class _LogoSection extends StatelessWidget {
                   TextButton.icon(
                     onPressed: onRestore,
                     icon: const Icon(Icons.restore),
-                    label: const Text('Usar logo padrão'),
+                    label: Text(
+                      fallbackAsset.isEmpty ? 'Remover logo' : 'Usar logo padrão',
+                    ),
                   ),
               ],
             ),

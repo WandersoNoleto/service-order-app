@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the generic channel: major*1000000 + minor*10000 + patch*100.
 # tool/build_release.sh reads it and checks it; client builds add their build
 # number (1-99) on top. Bump it in its own "chore: release x.y.z" commit.
-version: 1.0.4+1000400
+version: 1.1.0+1010000
 
 environment:
   sdk: ^3.13.7
@@ -77,17 +77,14 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Client branding: each flavor bundles only its own client's files.
-  # clients/private/ comes from the private repo; on a public clone it is
-  # missing and Flutter just logs a warning for the "val" entry.
   assets:
     # PDF font (Liberation Sans, SIL OFL 1.1 — see assets/fonts/LICENSE-LiberationSans.txt).
     - assets/fonts/LiberationSans-Regular.ttf
     - assets/fonts/LiberationSans-Bold.ttf
-    - path: clients/default/branding/
-      flavors: [standard]
-    - path: clients/private/val/branding/
-      flavors: [val]
+    # Client branding: each client flavor bundles only its own logo, e.g.
+    #   - path: clients/private/acme/branding/
+    #     flavors: [acme]
+    # The generic app ships without a logo (the user can add one in the app).
 
   # To add assets to your application, add an assets section, like this:
   # assets:

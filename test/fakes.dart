@@ -16,7 +16,7 @@ import 'package:service_order_app/features/update/update_installer.dart';
 
 /// In-memory repositories for widget tests (real SQLite is covered by the
 /// repository tests).
-AppDependencies fakeDependencies({String responsible = 'Valdejane'}) {
+AppDependencies fakeDependencies({String responsible = 'Fulano de Tal'}) {
   return AppDependencies(
     config: ClientConfig(
       channel: '',

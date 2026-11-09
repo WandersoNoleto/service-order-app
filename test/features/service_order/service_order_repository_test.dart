@@ -25,9 +25,9 @@ void main() {
 
   const order = ServiceOrder(
     orderNumber: '0001',
-    responsibleName: 'Valdejane',
+    responsibleName: 'Fulano de Tal',
     customerName: 'Clínica Sorriso',
-    customerCity: 'São João dos Patos',
+    customerCity: 'Cidade Exemplo',
     customerState: 'MA',
     underWarranty: false,
     scheduledTime: '14:30',
