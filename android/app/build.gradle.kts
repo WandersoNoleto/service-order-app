@@ -48,17 +48,18 @@ android {
         resValues = true
     }
 
-    // One flavor per client. Branding (name, logo, colors) comes from
-    // clients/<folder>/config.json via --dart-define-from-file.
+    // One flavor per client (white-label). Branding (name, logo, colors)
+    // comes from clients/<folder>/config.json via --dart-define-from-file.
+    // "standard" is the generic app. To add a client, see README.md:
+    //     create("acme") {
+    //         dimension = "client"
+    //         applicationIdSuffix = ".acme"
+    //         resValue("string", "app_name", "Ordens de Serviço")
+    //     }
     flavorDimensions += "client"
     productFlavors {
         create("standard") {
             dimension = "client"
-            resValue("string", "app_name", "Ordens de Serviço")
-        }
-        create("val") {
-            dimension = "client"
-            applicationIdSuffix = ".val"
             resValue("string", "app_name", "Ordens de Serviço")
         }
     }
