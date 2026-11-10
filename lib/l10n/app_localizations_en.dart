@@ -347,6 +347,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regionUnitedStates => 'United States';
 
   @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeSystem => 'Automatic (phone)';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get sampleCompanyName => 'Example Company';
 
   @override

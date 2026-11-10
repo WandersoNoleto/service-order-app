@@ -223,6 +223,12 @@ class _LanguageAndFormatCard extends StatelessWidget {
           '${l10n.regionUnitedStates} (${_sample(RegionFormat.unitedStates)})',
     };
 
+    final themes = {
+      ThemePreference.system: l10n.themeSystem,
+      ThemePreference.light: l10n.themeLight,
+      ThemePreference.dark: l10n.themeDark,
+    };
+
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -265,6 +271,21 @@ class _LanguageAndFormatCard extends StatelessWidget {
                 current: preferences.region,
               );
               if (choice != null) await preferences.setRegion(choice);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.brightness_6_outlined),
+            title: Text(l10n.theme),
+            subtitle: Text(themes[preferences.theme]!),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final choice = await _choose(
+                context,
+                title: l10n.theme,
+                options: themes,
+                current: preferences.theme,
+              );
+              if (choice != null) await preferences.setTheme(choice);
             },
           ),
           const SizedBox(height: 8),

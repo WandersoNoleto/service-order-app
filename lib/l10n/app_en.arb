@@ -111,6 +111,10 @@
   "regionSystem": "Automatic (phone)",
   "regionBrazil": "Brazil",
   "regionUnitedStates": "United States",
+  "theme": "Theme",
+  "themeSystem": "Automatic (phone)",
+  "themeLight": "Light",
+  "themeDark": "Dark",
 
   "sampleCompanyName": "Example Company",
   "sampleCompanyDocument": "00-0000000",

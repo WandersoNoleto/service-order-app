@@ -207,7 +207,7 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
       alignment: Alignment.bottomLeft,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.scaffoldBackgroundColor,
         // Hairline only while orders are scrolling underneath.
         border: overlapsContent
             ? Border(

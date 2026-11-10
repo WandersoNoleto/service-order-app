@@ -722,6 +722,30 @@ abstract class AppLocalizations {
   /// **'Estados Unidos'**
   String get regionUnitedStates;
 
+  /// No description provided for @theme.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tema'**
+  String get theme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automático (do celular)'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Claro'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escuro'**
+  String get themeDark;
+
   /// No description provided for @sampleCompanyName.
   ///
   /// In pt, this message translates to:

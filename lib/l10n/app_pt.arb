@@ -121,6 +121,10 @@
   "regionSystem": "Automático (do celular)",
   "regionBrazil": "Brasil",
   "regionUnitedStates": "Estados Unidos",
+  "theme": "Tema",
+  "themeSystem": "Automático (do celular)",
+  "themeLight": "Claro",
+  "themeDark": "Escuro",
 
   "sampleCompanyName": "Empresa Exemplo",
   "sampleCompanyDocument": "00.000.000/0001-00",

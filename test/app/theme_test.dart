@@ -23,4 +23,17 @@ void main() {
     expect(buildTheme(green).colorScheme.onPrimary, Colors.white);
     expect(buildTheme(const Color(0xFFFFE082)).colorScheme.onPrimary, Colors.black);
   });
+
+  test('dark theme uses a lighter, readable tone of the brand', () {
+    final dark = buildTheme(green, brightness: Brightness.dark);
+    expect(dark.brightness, Brightness.dark);
+    expect(
+      dark.colorScheme.primary.computeLuminance(),
+      greaterThan(green.computeLuminance()),
+    );
+    expect(
+      dark.scaffoldBackgroundColor.computeLuminance(),
+      lessThan(dark.colorScheme.surface.computeLuminance()),
+    );
+  });
 }
