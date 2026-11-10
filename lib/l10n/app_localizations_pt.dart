@@ -303,29 +303,43 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ela será removida do histórico. Esta ação não pode ser desfeita.';
 
   @override
-  String get companyCardTitle => 'Empresa';
+  String get companyCardFooter => 'Estes dados aparecem no cabeçalho do PDF';
 
   @override
-  String get companyCardFooter =>
-      'Estes dados aparecem no cabeçalho de todas as ordens de serviço.';
+  String get viewTemplate => 'Ver modelo';
 
   @override
-  String get rowName => 'Nome';
+  String get settingsPreferences => 'Preferências';
 
   @override
-  String get rowDocument => 'CNPJ';
+  String get settingsData => 'Dados';
 
   @override
-  String get rowPhone => 'Telefone';
+  String get settingsApp => 'Aplicativo';
 
   @override
-  String get rowAddress => 'Endereço';
+  String get backup => 'Backup';
 
   @override
-  String get rowCity => 'Cidade';
+  String get backupNever => 'Último: nunca';
 
   @override
-  String get rowResponsible => 'Responsável';
+  String get recommended => 'Recomendado';
+
+  @override
+  String get pdfFolder => 'Pasta dos PDFs';
+
+  @override
+  String get pdfFolderHint => 'Onde os arquivos gerados ficam salvos';
+
+  @override
+  String get updates => 'Atualizações';
+
+  @override
+  String get checkNow => 'Verificar';
+
+  @override
+  String get comingSoon => 'Funcionalidade em desenvolvimento. Aguarde!';
 
   @override
   String get notConfigured =>
@@ -340,13 +354,7 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get checkForUpdates => 'Verificar atualizações';
-
-  @override
   String get upToDate => 'Você já está na versão mais recente.';
-
-  @override
-  String get languageAndFormat => 'Idioma e formato';
 
   @override
   String get language => 'Idioma';
@@ -362,9 +370,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get region => 'Formato regional';
-
-  @override
-  String get regionHint => 'Moeda, datas e horas';
 
   @override
   String get regionSystem => 'Automático (do celular)';
@@ -443,9 +448,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String defaultValue(String value) {
     return 'Padrão: $value';
   }
-
-  @override
-  String get emptyValue => '(vazio)';
 
   @override
   String get restoreDefault => 'Restaurar padrão';

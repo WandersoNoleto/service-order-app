@@ -303,29 +303,43 @@ class AppLocalizationsEn extends AppLocalizations {
       'It will be removed from the history. This can\'t be undone.';
 
   @override
-  String get companyCardTitle => 'Company';
+  String get companyCardFooter => 'This data appears on the PDF header';
 
   @override
-  String get companyCardFooter =>
-      'This information appears on the header of every service order.';
+  String get viewTemplate => 'View template';
 
   @override
-  String get rowName => 'Name';
+  String get settingsPreferences => 'Preferences';
 
   @override
-  String get rowDocument => 'Tax ID';
+  String get settingsData => 'Data';
 
   @override
-  String get rowPhone => 'Phone';
+  String get settingsApp => 'App';
 
   @override
-  String get rowAddress => 'Address';
+  String get backup => 'Backup';
 
   @override
-  String get rowCity => 'City';
+  String get backupNever => 'Last: never';
 
   @override
-  String get rowResponsible => 'Responsible';
+  String get recommended => 'Recommended';
+
+  @override
+  String get pdfFolder => 'PDF folder';
+
+  @override
+  String get pdfFolderHint => 'Where generated files are saved';
+
+  @override
+  String get updates => 'Updates';
+
+  @override
+  String get checkNow => 'Check';
+
+  @override
+  String get comingSoon => 'This feature is in development. Coming soon!';
 
   @override
   String get notConfigured =>
@@ -340,13 +354,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get checkForUpdates => 'Check for updates';
-
-  @override
   String get upToDate => 'You\'re on the latest version.';
-
-  @override
-  String get languageAndFormat => 'Language and format';
 
   @override
   String get language => 'Language';
@@ -362,9 +370,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get region => 'Regional format';
-
-  @override
-  String get regionHint => 'Currency, dates and times';
 
   @override
   String get regionSystem => 'Automatic (phone)';
@@ -443,9 +448,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String defaultValue(String value) {
     return 'Default: $value';
   }
-
-  @override
-  String get emptyValue => '(empty)';
 
   @override
   String get restoreDefault => 'Restore default';

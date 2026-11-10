@@ -78,13 +78,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Exemplo'), findsOneWidget);
-    expect(find.text('Fulano de Tal'), findsOneWidget);
+    expect(find.textContaining('Fulano de Tal'), findsOneWidget);
 
     await deps.preferences.setLanguage(LanguagePreference.english);
     await tester.pumpAndSettle();
 
     expect(find.text('Example Company'), findsOneWidget);
-    expect(find.text('John Doe'), findsOneWidget);
+    expect(find.textContaining('John Doe'), findsOneWidget);
     expect(find.text('Empresa Exemplo'), findsNothing);
   });
 
@@ -103,7 +103,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Oficina do João'), findsOneWidget);
-    expect(find.text('John Doe'), findsOneWidget);
+    expect(find.textContaining('John Doe'), findsOneWidget);
   });
 
   testWidgets('starts on history and switches to settings', (tester) async {
@@ -116,7 +116,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Fulano de Tal'), findsOneWidget);
+    expect(find.textContaining('Fulano de Tal'), findsOneWidget);
   });
 
   testWidgets('history is split in sections by day', (tester) async {
@@ -235,7 +235,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
 
     // No changes: back leaves right away.
@@ -243,7 +243,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dados da empresa'), findsNothing);
 
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nome da empresa'),
@@ -365,7 +365,7 @@ void main() {
   Future<void> openCompanyForm(WidgetTester tester) async {
     await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
   }
 
@@ -390,14 +390,22 @@ void main() {
     );
     await tester.enterText(responsible, 'Fulano Souza');
     await tester.pump();
+    // A filled field shows no default hint, only the restore button.
+    expect(find.textContaining('Padrão:'), findsNothing);
+    expect(find.byTooltip('Restaurar padrão'), findsWidgets);
+
+    await tester.enterText(responsible, '');
+    await tester.pump();
     expect(find.text('Padrão: Fulano de Tal'), findsOneWidget);
+    await tester.enterText(responsible, 'Fulano Souza');
+    await tester.pump();
 
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dados da empresa'), findsNothing);
-    expect(find.text('(99) 91234-5678'), findsOneWidget);
-    expect(find.text('Fulano Souza'), findsOneWidget);
+    expect(find.textContaining('(99) 91234-5678'), findsOneWidget);
+    expect(find.textContaining('Fulano Souza'), findsOneWidget);
   });
 
   testWidgets('company name is required', (tester) async {
@@ -561,7 +569,10 @@ void main() {
             .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
             .first,
       );
-      await tester.tap(find.text('Verificar atualizações'));
+      // Built below the fold: bring the button into view before tapping.
+      await tester.ensureVisible(find.text('Verificar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Verificar'));
       await tester.pumpAndSettle();
 
       expect(find.text('Você já está na versão mais recente.'), findsOneWidget);

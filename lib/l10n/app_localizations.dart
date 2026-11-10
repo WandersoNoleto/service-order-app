@@ -620,53 +620,83 @@ abstract class AppLocalizations {
   /// **'Ela será removida do histórico. Esta ação não pode ser desfeita.'**
   String get deleteOrderMessage;
 
-  /// No description provided for @companyCardTitle.
-  ///
-  /// In pt, this message translates to:
-  /// **'Empresa'**
-  String get companyCardTitle;
-
   /// No description provided for @companyCardFooter.
   ///
   /// In pt, this message translates to:
-  /// **'Estes dados aparecem no cabeçalho de todas as ordens de serviço.'**
+  /// **'Estes dados aparecem no cabeçalho do PDF'**
   String get companyCardFooter;
 
-  /// No description provided for @rowName.
+  /// No description provided for @viewTemplate.
   ///
   /// In pt, this message translates to:
-  /// **'Nome'**
-  String get rowName;
+  /// **'Ver modelo'**
+  String get viewTemplate;
 
-  /// No description provided for @rowDocument.
+  /// No description provided for @settingsPreferences.
   ///
   /// In pt, this message translates to:
-  /// **'CNPJ'**
-  String get rowDocument;
+  /// **'Preferências'**
+  String get settingsPreferences;
 
-  /// No description provided for @rowPhone.
+  /// No description provided for @settingsData.
   ///
   /// In pt, this message translates to:
-  /// **'Telefone'**
-  String get rowPhone;
+  /// **'Dados'**
+  String get settingsData;
 
-  /// No description provided for @rowAddress.
+  /// No description provided for @settingsApp.
   ///
   /// In pt, this message translates to:
-  /// **'Endereço'**
-  String get rowAddress;
+  /// **'Aplicativo'**
+  String get settingsApp;
 
-  /// No description provided for @rowCity.
+  /// No description provided for @backup.
   ///
   /// In pt, this message translates to:
-  /// **'Cidade'**
-  String get rowCity;
+  /// **'Backup'**
+  String get backup;
 
-  /// No description provided for @rowResponsible.
+  /// No description provided for @backupNever.
   ///
   /// In pt, this message translates to:
-  /// **'Responsável'**
-  String get rowResponsible;
+  /// **'Último: nunca'**
+  String get backupNever;
+
+  /// No description provided for @recommended.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recomendado'**
+  String get recommended;
+
+  /// No description provided for @pdfFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pasta dos PDFs'**
+  String get pdfFolder;
+
+  /// No description provided for @pdfFolderHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde os arquivos gerados ficam salvos'**
+  String get pdfFolderHint;
+
+  /// No description provided for @updates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizações'**
+  String get updates;
+
+  /// No description provided for @checkNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar'**
+  String get checkNow;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Funcionalidade em desenvolvimento. Aguarde!'**
+  String get comingSoon;
 
   /// No description provided for @notConfigured.
   ///
@@ -686,23 +716,11 @@ abstract class AppLocalizations {
   /// **'Versão {version}'**
   String versionLabel(String version);
 
-  /// No description provided for @checkForUpdates.
-  ///
-  /// In pt, this message translates to:
-  /// **'Verificar atualizações'**
-  String get checkForUpdates;
-
   /// No description provided for @upToDate.
   ///
   /// In pt, this message translates to:
   /// **'Você já está na versão mais recente.'**
   String get upToDate;
-
-  /// No description provided for @languageAndFormat.
-  ///
-  /// In pt, this message translates to:
-  /// **'Idioma e formato'**
-  String get languageAndFormat;
 
   /// No description provided for @language.
   ///
@@ -733,12 +751,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Formato regional'**
   String get region;
-
-  /// No description provided for @regionHint.
-  ///
-  /// In pt, this message translates to:
-  /// **'Moeda, datas e horas'**
-  String get regionHint;
 
   /// No description provided for @regionSystem.
   ///
@@ -889,12 +901,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Padrão: {value}'**
   String defaultValue(String value);
-
-  /// No description provided for @emptyValue.
-  ///
-  /// In pt, this message translates to:
-  /// **'(vazio)'**
-  String get emptyValue;
 
   /// No description provided for @restoreDefault.
   ///

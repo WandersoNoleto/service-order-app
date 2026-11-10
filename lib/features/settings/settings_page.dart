@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../app/coming_soon.dart';
 import '../../core/formatting/region_format.dart';
 import '../../core/preferences/app_preferences.dart';
 import '../../l10n/app_localizations.dart';
@@ -55,14 +58,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profile = _profile;
+    // Same rule as the history: on wide screens the content stays in a
+    // readable column instead of stretching.
+    final gutter =
+        math.max(12.0, (MediaQuery.sizeOf(context).width - 720) / 2);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).navSettings)),
+      appBar: AppBar(title: Text(l10n.navSettings)),
       body: profile == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(gutter, 4, gutter, 24),
               children: [
                 if (!_deps.config.isConfigured) const _NotConfiguredWarning(),
                 _CompanyCard(
@@ -70,143 +78,51 @@ class _SettingsPageState extends State<SettingsPage> {
                   dependencies: _deps,
                   onEdit: _edit,
                 ),
-                const _LanguageAndFormatCard(),
-                _AboutCard(dependencies: _deps),
-              ],
-            ),
-    );
-  }
-}
-
-/// Summary of the company data used on every service order.
-class _CompanyCard extends StatelessWidget {
-  const _CompanyCard({
-    required this.profile,
-    required this.dependencies,
-    required this.onEdit,
-  });
-
-  final CompanyProfile profile;
-  final AppDependencies dependencies;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final cityState = [profile.companyCity, profile.companyState]
-        .where((part) => part.isNotEmpty)
-        .join(' - ');
-
-    final rows = [
-      (l10n.rowName, profile.companyName),
-      (l10n.rowDocument, profile.companyDocument),
-      (l10n.rowPhone, profile.companyPhone),
-      (l10n.rowAddress, profile.companyAddress),
-      (l10n.rowCity, cityState),
-      (l10n.rowResponsible, profile.responsibleName),
-    ];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.companyCardTitle,
-                    style: theme.textTheme.titleLarge,
-                  ),
+                _Group(
+                  title: l10n.settingsPreferences,
+                  children: _preferenceTiles(context),
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(l10n.edit),
+                _Group(
+                  title: l10n.settingsData,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.cloud_upload_outlined),
+                      title: Row(
+                        spacing: 8,
+                        children: [
+                          Flexible(child: Text(l10n.backup)),
+                          _Tag(l10n.recommended),
+                        ],
+                      ),
+                      subtitle: Text(l10n.backupNever),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => showComingSoon(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.folder_outlined),
+                      title: Text(l10n.pdfFolder),
+                      subtitle: Text(l10n.pdfFolderHint),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => showComingSoon(context),
+                    ),
+                  ],
+                ),
+                _Group(
+                  title: l10n.settingsApp,
+                  children: [_UpdateTile(dependencies: _deps)],
                 ),
               ],
             ),
-            // Takes no space when there is no logo.
-            CompanyLogo(
-              logos: dependencies.logos,
-              customLogoFile: profile.customLogoFile,
-              fallbackAsset: profile.defaultLogoAsset,
-              height: 110,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.only(top: 20),
-            ),
-            const SizedBox(height: 12),
-            for (final (index, (label, value)) in rows.indexed) ...[
-              if (index > 0) const Divider(height: 1),
-              _InfoRow(label: label, value: value),
-            ],
-            const SizedBox(height: 16),
-            Text(
-              l10n.companyCardFooter,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
-}
-
-/// "Label ........ value" line of the company card. Long values (address)
-/// wrap on the right side; empty values show a dash.
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value.isEmpty ? '—' : value,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Language and regional format, chosen independently (e.g. English with
-/// Brazilian formats). Both default to the phone settings.
-class _LanguageAndFormatCard extends StatelessWidget {
-  const _LanguageAndFormatCard();
 
   /// Sample of a regional format: "R$ 1.234,56 · 25/10/2026".
   static String _sample(RegionFormat format) =>
       '${format.money(123456)} · ${format.date(DateTime(2026, 10, 25))}';
 
-  @override
-  Widget build(BuildContext context) {
+  /// Language, regional format and theme, chosen independently (e.g.
+  /// English with Brazilian formats). All default to the phone settings.
+  List<Widget> _preferenceTiles(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final preferences = PreferencesScope.of(context);
 
@@ -222,76 +138,64 @@ class _LanguageAndFormatCard extends StatelessWidget {
       RegionPreference.unitedStates:
           '${l10n.regionUnitedStates} (${_sample(RegionFormat.unitedStates)})',
     };
-
     final themes = {
       ThemePreference.system: l10n.themeSystem,
       ThemePreference.light: l10n.themeLight,
       ThemePreference.dark: l10n.themeDark,
     };
 
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-            child: Text(
-              l10n.languageAndFormat,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.translate),
-            title: Text(l10n.language),
-            subtitle: Text(languages[preferences.language]!),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final choice = await _choose(
-                context,
-                title: l10n.language,
-                options: languages,
-                current: preferences.language,
-              );
-              if (choice != null) await preferences.setLanguage(choice);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.payments_outlined),
-            title: Text(l10n.region),
-            subtitle: Text(
-              '${regions[preferences.region]!}\n${l10n.regionHint}',
-            ),
-            isThreeLine: true,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final choice = await _choose(
-                context,
-                title: l10n.region,
-                options: regions,
-                current: preferences.region,
-              );
-              if (choice != null) await preferences.setRegion(choice);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.brightness_6_outlined),
-            title: Text(l10n.theme),
-            subtitle: Text(themes[preferences.theme]!),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final choice = await _choose(
-                context,
-                title: l10n.theme,
-                options: themes,
-                current: preferences.theme,
-              );
-              if (choice != null) await preferences.setTheme(choice);
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
+    return [
+      ListTile(
+        leading: const Icon(Icons.translate),
+        title: Text(l10n.language),
+        subtitle: Text(languages[preferences.language]!),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.language,
+            options: languages,
+            current: preferences.language,
+          );
+          if (choice != null) await preferences.setLanguage(choice);
+        },
       ),
-    );
+      ListTile(
+        leading: const Icon(Icons.payments_outlined),
+        title: Text(l10n.region),
+        // Always shows what the format looks like, even on "automatic".
+        subtitle: Text(
+          preferences.region == RegionPreference.system
+              ? '${l10n.regionSystem} · ${_sample(preferences.format)}'
+              : regions[preferences.region]!,
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.region,
+            options: regions,
+            current: preferences.region,
+          );
+          if (choice != null) await preferences.setRegion(choice);
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.brightness_6_outlined),
+        title: Text(l10n.theme),
+        subtitle: Text(themes[preferences.theme]!),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.theme,
+            options: themes,
+            current: preferences.theme,
+          );
+          if (choice != null) await preferences.setTheme(choice);
+        },
+      ),
+    ];
   }
 
   /// Single-choice dialog; null when dismissed.
@@ -326,17 +230,190 @@ class _LanguageAndFormatCard extends StatelessWidget {
   }
 }
 
+/// Company profile: logo, name and the main data in two short lines. Tap
+/// to edit. The strip below tells where the data is used.
+class _CompanyCard extends StatelessWidget {
+  const _CompanyCard({
+    required this.profile,
+    required this.dependencies,
+    required this.onEdit,
+  });
+
+  final CompanyProfile profile;
+  final AppDependencies dependencies;
+  final VoidCallback onEdit;
+
+  static String _join(List<String> parts) =>
+      parts.where((part) => part.isNotEmpty).join(' · ');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: colors.onSurfaceVariant,
+    );
+
+    final cityState = [profile.companyCity, profile.companyState]
+        .where((part) => part.isNotEmpty)
+        .join(' - ');
+    final lines = [
+      _join([profile.companyDocument, profile.companyPhone]),
+      _join([cityState, profile.responsibleName]),
+    ].where((line) => line.isNotEmpty);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: onEdit,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 4, 14),
+              child: Row(
+                children: [
+                  // Takes no space when there is no logo.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 88),
+                    child: CompanyLogo(
+                      logos: dependencies.logos,
+                      customLogoFile: profile.customLogoFile,
+                      fallbackAsset: profile.defaultLogoAsset,
+                      height: 52,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.only(right: 14),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 2,
+                      children: [
+                        Text(
+                          profile.companyName,
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        for (final line in lines) Text(line, style: muted),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onEdit,
+                    tooltip: l10n.edit,
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          ColoredBox(
+            color: colors.surfaceContainerLow,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 4, 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.picture_as_pdf_outlined,
+                    size: 16,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(l10n.companyCardFooter, style: muted)),
+                  TextButton(
+                    onPressed: () => showComingSoon(context),
+                    child: Text(l10n.viewTemplate),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Titled group of rows inside one card.
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
+          child: Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final (index, child) in children.indexed) ...[
+                if (index > 0) const Divider(height: 1, indent: 56),
+                child,
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Small label next to a row title ("Recomendado").
+class _Tag extends StatelessWidget {
+  const _Tag(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        child: Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onTertiaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Installed version and the manual "check for updates".
-class _AboutCard extends StatefulWidget {
-  const _AboutCard({required this.dependencies});
+class _UpdateTile extends StatefulWidget {
+  const _UpdateTile({required this.dependencies});
 
   final AppDependencies dependencies;
 
   @override
-  State<_AboutCard> createState() => _AboutCardState();
+  State<_UpdateTile> createState() => _UpdateTileState();
 }
 
-class _AboutCardState extends State<_AboutCard> {
+class _UpdateTileState extends State<_UpdateTile> {
   late final Future<InstalledVersion> _installed =
       widget.dependencies.updates.installedVersion();
   bool _checking = false;
@@ -368,26 +445,26 @@ class _AboutCardState extends State<_AboutCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.system_update_outlined),
-        title: FutureBuilder<InstalledVersion>(
-          future: _installed,
-          builder: (_, snapshot) => Text(
-            snapshot.hasData
-                ? l10n.versionLabel(snapshot.data!.name)
-                : l10n.version,
-          ),
+    return ListTile(
+      leading: const Icon(Icons.system_update_outlined),
+      title: Text(l10n.updates),
+      subtitle: FutureBuilder<InstalledVersion>(
+        future: _installed,
+        builder: (_, snapshot) => Text(
+          snapshot.hasData
+              ? l10n.versionLabel(snapshot.data!.name)
+              : l10n.version,
         ),
-        subtitle: Text(l10n.checkForUpdates),
-        trailing: _checking
-            ? const SizedBox.square(
+      ),
+      trailing: _checking
+          ? const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox.square(
                 dimension: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.chevron_right),
-        onTap: _checking ? null : _check,
-      ),
+              ),
+            )
+          : TextButton(onPressed: _check, child: Text(l10n.checkNow)),
     );
   }
 }
