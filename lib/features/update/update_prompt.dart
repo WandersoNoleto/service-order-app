@@ -2,32 +2,44 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import 'update_checker.dart';
 import 'update_installer.dart';
 
-/// "Nova versão disponível" dialog. If the user accepts, shows the
+/// Translated message for a failed update check.
+String updateCheckErrorMessage(AppLocalizations l10n, UpdateCheckException e) =>
+    e.isOffline ? l10n.updateOffline : l10n.updateServerError(e.statusCode!);
+
+/// Translated message for a failed installation.
+String installFailureMessage(AppLocalizations l10n, InstallFailed failure) =>
+    switch (failure.reason) {
+      InstallFailure.permission => l10n.installPermission,
+      InstallFailure.download => l10n.installDownloadFailed,
+      InstallFailure.canceled => l10n.installCanceled,
+      InstallFailure.alreadyRunning => l10n.installAlreadyRunning,
+      InstallFailure.other => l10n.installError(failure.detail ?? '?'),
+    };
+
+/// "New version available" dialog. If the user accepts, shows the
 /// download progress until the Android installer opens.
 Future<void> showUpdateDialog(
   BuildContext context, {
   required AvailableUpdate update,
   required UpdateInstaller installer,
 }) async {
+  final l10n = AppLocalizations.of(context);
   final accepted = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Nova versão disponível'),
+      title: Text(l10n.newVersionTitle),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'A versão v${update.version.label} do aplicativo está '
-              'disponível.\n\nToque em "Atualizar" para instalar as '
-              'melhorias mais recentes.',
-            ),
+            Text(l10n.newVersionMessage(update.version.label)),
             // GitHub release notes are written in English, so they stay
-            // collapsed; the text above is what the client reads.
+            // collapsed; the text above is what the user reads.
             if (update.notes.isNotEmpty) _ReleaseNotes(notes: update.notes),
           ],
         ),
@@ -35,11 +47,11 @@ Future<void> showUpdateDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Depois'),
+          child: Text(l10n.later),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Atualizar'),
+          child: Text(l10n.update),
         ),
       ],
     ),
@@ -84,7 +96,7 @@ class _ReleaseNotesState extends State<_ReleaseNotes> {
           onPressed: () => setState(() => _expanded = !_expanded),
           iconAlignment: IconAlignment.end,
           icon: Icon(_expanded ? Icons.expand_less : Icons.chevron_right),
-          label: const Text('Release notes'),
+          label: Text(AppLocalizations.of(context).releaseNotes),
         ),
         if (_expanded)
           Container(
@@ -101,7 +113,7 @@ class _ReleaseNotesState extends State<_ReleaseNotes> {
   }
 }
 
-/// Pops with null once the installer opens, or with an error message.
+/// Pops with null once the installer opens, or with a translated error.
 class _DownloadDialog extends StatefulWidget {
   const _DownloadDialog({required this.progress});
 
@@ -125,11 +137,16 @@ class _DownloadDialogState extends State<_DownloadDialog> {
             setState(() => _percent = percent);
           case InstallerOpened():
             _close(null);
-          case InstallFailed(:final message):
-            _close(message);
+          case InstallFailed():
+            _close(installFailureMessage(AppLocalizations.of(context), event));
         }
       },
-      onError: (Object error) => _close('Erro ao baixar a atualização: $error'),
+      onError: (Object error) => _close(
+        installFailureMessage(
+          AppLocalizations.of(context),
+          InstallFailed(InstallFailure.other, detail: '$error'),
+        ),
+      ),
     );
   }
 
@@ -147,16 +164,17 @@ class _DownloadDialogState extends State<_DownloadDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final percent = _percent;
 
     return AlertDialog(
-      title: const Text('Baixando atualização'),
+      title: Text(l10n.downloadingUpdate),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 12,
         children: [
           LinearProgressIndicator(value: percent == null ? null : percent / 100),
-          Text(percent == null ? 'Iniciando…' : '$percent%'),
+          Text(percent == null ? l10n.starting : '$percent%'),
         ],
       ),
     );

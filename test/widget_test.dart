@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
 import 'package:service_order_app/app/brand_bottom_bar.dart';
+import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/update/app_version.dart';
@@ -14,6 +15,97 @@ import 'fakes.dart';
 const _order = ServiceOrder(orderNumber: '0007', customerName: 'Dr. Pedro');
 
 void main() {
+  testWidgets('English interface with US formats', (tester) async {
+    final deps = fakeDependencies(
+      language: LanguagePreference.english,
+      region: RegionPreference.unitedStates,
+    );
+    await deps.orders.create(
+      const ServiceOrder(
+        orderNumber: '0042',
+        items: [ServiceOrderItem(quantity: 1, unitPriceCents: 123456)],
+      ),
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+
+    expect(find.text('History'), findsWidgets);
+    expect(find.text('Create'), findsOneWidget);
+    expect(find.text('\$1,234.56'), findsOneWidget);
+    expect(find.textContaining('No customer'), findsOneWidget);
+  });
+
+  testWidgets('language changes immediately from settings', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(_order);
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Idioma'),
+      200,
+      scrollable: find
+          .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
+          .first,
+    );
+    await tester.tap(find.text('Idioma'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Settings'), findsWidgets);
+    expect(find.text('Language'), findsOneWidget);
+
+    // The PDF follows the new language too.
+    await tester.tap(find.text('History'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('0007'));
+    await tester.pumpAndSettle();
+    final documents = deps.documents as FakeServiceOrderDocuments;
+    expect(documents.builtInLanguage.last, 'en');
+  });
+
+  testWidgets('example company follows the app language', (tester) async {
+    final deps = fakeDependencies(sampleCompany: true);
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Configurações'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Empresa Exemplo'), findsOneWidget);
+    expect(find.text('Fulano de Tal'), findsOneWidget);
+
+    await deps.preferences.setLanguage(LanguagePreference.english);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Example Company'), findsOneWidget);
+    expect(find.text('John Doe'), findsOneWidget);
+    expect(find.text('Empresa Exemplo'), findsNothing);
+  });
+
+  testWidgets('edited company data is kept in any language', (tester) async {
+    final deps = fakeDependencies(sampleCompany: true);
+    await deps.settings.saveCompanyFields(
+      deps.companyDefaults,
+      {CompanyField.name: 'Oficina do João'},
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await deps.preferences.setLanguage(LanguagePreference.english);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Oficina do João'), findsOneWidget);
+    expect(find.text('John Doe'), findsOneWidget);
+  });
+
   testWidgets('starts on history and switches to settings', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
@@ -434,7 +526,7 @@ void main() {
       final deps = fakeDependencies();
       (deps.updates as FakeUpdateChecker).nextUpdate = update;
       (deps.installer as FakeUpdateInstaller).events = const [
-        InstallFailed('Falha ao baixar a atualização.'),
+        InstallFailed(InstallFailure.download),
       ];
 
       await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
@@ -442,7 +534,9 @@ void main() {
       await tester.tap(find.text('Atualizar'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Falha ao baixar a atualização.'), findsOneWidget);
+      expect(find.text(
+        'Falha ao baixar a atualização. Verifique a internet e tente de novo.',
+      ), findsOneWidget);
     });
 
     testWidgets('settings shows the version and checks manually',

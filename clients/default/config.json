@@ -1,12 +1,13 @@
 {
   "APP_CHANNEL": "",
-  "COMPANY_NAME": "Empresa Exemplo",
-  "COMPANY_DOCUMENT": "00.000.000/0001-00",
-  "COMPANY_PHONE": "(00) 00000-0000",
-  "COMPANY_ADDRESS": "Rua Exemplo, 100 - Centro",
-  "COMPANY_CITY": "Cidade",
-  "COMPANY_STATE": "UF",
-  "COMPANY_RESPONSIBLE": "Fulano de Tal",
+  "SAMPLE_COMPANY": "true",
+  "COMPANY_NAME": "",
+  "COMPANY_DOCUMENT": "",
+  "COMPANY_PHONE": "",
+  "COMPANY_ADDRESS": "",
+  "COMPANY_CITY": "",
+  "COMPANY_STATE": "",
+  "COMPANY_RESPONSIBLE": "",
   "BRAND_COLOR": "FF508D6B",
   "LOGO_ASSET": ""
 }

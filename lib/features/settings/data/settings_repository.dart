@@ -84,6 +84,29 @@ class SettingsRepository {
     );
   }
 
+  /// A plain app preference (language, regional format…), or null when the
+  /// user never changed it.
+  Future<String?> preference(String key) async {
+    final rows = await _db.query(
+      'app_settings',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    return rows.isEmpty ? null : rows.first['value'] as String;
+  }
+
+  /// Saves a preference; null removes it (back to the default).
+  Future<void> setPreference(String key, String? value) {
+    if (value == null) {
+      return _db.delete('app_settings', where: 'key = ?', whereArgs: [key]);
+    }
+    return _db.insert(
+      'app_settings',
+      {'key': key, 'value': value},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   /// Back to factory defaults: all company fields and the logo.
   Future<void> resetCompany() {
     final keys = [for (final field in CompanyField.values) _key(field), _logoFileKey];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
+import '../core/preferences/app_preferences.dart';
+import '../l10n/app_localizations.dart';
 import 'app_dependencies.dart';
 import 'home_shell.dart';
 import 'theme.dart';
@@ -12,15 +13,23 @@ class ServiceOrderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ordens de Serviço',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(dependencies.config.brandColor),
-      // Date/time pickers and system texts in Portuguese.
-      locale: const Locale('pt', 'BR'),
-      supportedLocales: const [Locale('pt', 'BR')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      home: HomeShell(dependencies: dependencies),
+    final preferences = dependencies.preferences;
+
+    // Rebuilds when the language or regional format changes in Settings.
+    return PreferencesScope(
+      preferences: preferences,
+      child: ListenableBuilder(
+        listenable: preferences,
+        builder: (context, _) => MaterialApp(
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(dependencies.config.brandColor),
+          locale: preferences.locale,
+          supportedLocales: AppPreferences.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: HomeShell(dependencies: dependencies),
+        ),
+      ),
     );
   }
 }

@@ -51,6 +51,7 @@ dependencies:
   http: ^1.6.0
   package_info_plus: ^10.2.2
   ota_update: ^7.1.0
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # Translations from lib/l10n/*.arb (see l10n.yaml), generated on build.
+  generate: true
 
   assets:
     # PDF font (Liberation Sans, SIL OFL 1.1 — see assets/fonts/LICENSE-LiberationSans.txt).

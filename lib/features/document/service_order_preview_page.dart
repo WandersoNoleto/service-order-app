@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../l10n/app_localizations.dart';
 import '../service_order/data/service_order.dart';
 import '../service_order/service_order_form_page.dart';
 
@@ -36,6 +37,10 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
 
   AppDependencies get _deps => widget.dependencies;
 
+  /// Translations for the app language. Looked up from the preferences (not
+  /// the context) because the PDF starts building in initState.
+  AppLocalizations get _l10n => lookupAppLocalizations(_deps.preferences.locale);
+
   @override
   void initState() {
     super.initState();
@@ -54,8 +59,13 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
         if (mounted) Navigator.of(context).pop();
         return;
       }
-      final company = await _deps.settings.companyProfile(_deps.config);
-      final pdf = await _deps.documents.buildPdf(order, company);
+      final company = await _deps.settings.companyProfile(_deps.companyDefaults);
+      final pdf = await _deps.documents.buildPdf(
+        order,
+        company,
+        l10n: _l10n,
+        format: _deps.preferences.format,
+      );
       final pages = await _deps.documents.renderPages(pdf);
       if (!mounted) return;
       setState(() {
@@ -77,7 +87,7 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
     } on Exception catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível concluir: $error')),
+        SnackBar(content: Text(_l10n.couldNotComplete('$error'))),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -100,18 +110,16 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Excluir esta ordem de serviço?'),
-        content: const Text(
-          'Ela será removida do histórico. Esta ação não pode ser desfeita.',
-        ),
+        title: Text(_l10n.deleteOrderTitle),
+        content: Text(_l10n.deleteOrderMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(_l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
+            child: Text(_l10n.delete),
           ),
         ],
       ),
@@ -125,9 +133,10 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
   @override
   Widget build(BuildContext context) {
     final order = _order;
+    final l10n = AppLocalizations.of(context);
     final number = order == null || order.orderNumber.isEmpty
-        ? 'Ordem de serviço'
-        : 'Ordem de serviço ${order.orderNumber}';
+        ? l10n.orderTitle
+        : l10n.orderTitleWithNumber(order.orderNumber);
     final ready = _pdf != null && _pages != null && !_busy;
 
     return Scaffold(
@@ -135,7 +144,7 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
         title: Text(number),
         actions: [
           IconButton(
-            tooltip: 'Editar',
+            tooltip: l10n.edit,
             icon: const Icon(Icons.edit_outlined),
             onPressed: order == null || _busy ? null : _edit,
           ),
@@ -144,8 +153,11 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
             onSelected: (action) => switch (action) {
               _MenuAction.delete => _delete(),
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: _MenuAction.delete, child: Text('Excluir')),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _MenuAction.delete,
+                child: Text(l10n.delete),
+              ),
             ],
           ),
         ],
@@ -160,27 +172,43 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: ready
-                      ? () => _run(() => _deps.documents.sharePdf(order!, _pdf!))
+                      ? () => _run(
+                            () => _deps.documents.sharePdf(
+                              order!,
+                              _pdf!,
+                              prefix: l10n.pdfFilePrefix,
+                            ),
+                          )
                       : null,
                   icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: const Text('Enviar PDF'),
+                  label: Text(l10n.sendPdf),
                 ),
               ),
               Expanded(
                 child: FilledButton.tonalIcon(
                   onPressed: ready
                       ? () => _run(
-                            () => _deps.documents.shareImages(order!, _pages!),
+                            () => _deps.documents.shareImages(
+                              order!,
+                              _pages!,
+                              prefix: l10n.pdfFilePrefix,
+                            ),
                           )
                       : null,
                   icon: const Icon(Icons.image_outlined),
-                  label: const Text('Imagem'),
+                  label: Text(l10n.image),
                 ),
               ),
               IconButton.filledTonal(
-                tooltip: 'Imprimir',
+                tooltip: l10n.print,
                 onPressed: ready
-                    ? () => _run(() => _deps.documents.printPdf(order!, _pdf!))
+                    ? () => _run(
+                          () => _deps.documents.printPdf(
+                            order!,
+                            _pdf!,
+                            prefix: l10n.pdfFilePrefix,
+                          ),
+                        )
                     : null,
                 icon: const Icon(Icons.print_outlined),
               ),
@@ -200,8 +228,11 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
             mainAxisSize: MainAxisSize.min,
             spacing: 12,
             children: [
-              Text('Erro ao gerar o documento:\n$_error', textAlign: TextAlign.center),
-              OutlinedButton(onPressed: _load, child: const Text('Tentar de novo')),
+              Text(
+                _l10n.documentError('$_error'),
+                textAlign: TextAlign.center,
+              ),
+              OutlinedButton(onPressed: _load, child: Text(_l10n.tryAgain)),
             ],
           ),
         ),

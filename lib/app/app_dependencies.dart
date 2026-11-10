@@ -1,10 +1,12 @@
 import '../core/config/client_config.dart';
+import '../core/preferences/app_preferences.dart';
 import '../core/storage/logo_storage.dart';
 import '../features/document/service_order_documents.dart';
 import '../features/service_order/data/service_order_repository.dart';
 import '../features/settings/data/settings_repository.dart';
 import '../features/update/update_checker.dart';
 import '../features/update/update_installer.dart';
+import '../l10n/app_localizations.dart';
 
 /// Everything the screens need, created once in main.dart and passed down.
 ///
@@ -18,11 +20,13 @@ class AppDependencies {
     required this.logos,
     required this.updates,
     required this.installer,
+    required this.preferences,
     this.checkUpdatesOnStartup = true,
   });
 
   /// Build defaults. Screens showing company data should read
-  /// `settings.companyProfile(config)` instead, which includes user edits.
+  /// `settings.companyProfile(companyDefaults)` instead, which includes
+  /// user edits and translates the example company.
   final ClientConfig config;
   final ServiceOrderRepository orders;
   final SettingsRepository settings;
@@ -31,7 +35,16 @@ class AppDependencies {
   final UpdateChecker updates;
   final UpdateInstaller installer;
 
+  /// Language and regional format (Settings).
+  final AppPreferences preferences;
+
   /// Whether to look for a new version when the app opens. The manual
   /// check in Settings works either way.
   final bool checkUpdatesOnStartup;
+
+  /// Company defaults in the current app language (the generic app's
+  /// example company is translated). Use this, not [config], with
+  /// `settings.companyProfile(...)` and `settings.saveCompanyFields(...)`.
+  ClientConfig get companyDefaults =>
+      config.localized(lookupAppLocalizations(preferences.locale));
 }

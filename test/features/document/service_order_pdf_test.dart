@@ -6,11 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'package:service_order_app/core/config/client_config.dart';
+import 'package:service_order_app/core/formatting/region_format.dart';
 import 'package:service_order_app/features/document/pdf_assets.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/document/service_order_pdf.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
+import 'package:service_order_app/l10n/app_localizations.dart';
 
 /// Sample PDFs are written here so the layout can be checked by eye.
 const _previewDir = 'build/pdf_preview';
@@ -99,11 +101,15 @@ void main() {
     String fileName, {
     ClientConfig company = _company,
     bool withLogo = true,
+    Locale language = const Locale('pt'),
+    RegionFormat format = RegionFormat.brazil,
   }) async {
     final document = buildServiceOrderDocument(
       order: order,
       company: CompanyProfile(defaults: company),
       assets: withLogo ? assets : assets.withLogo(null),
+      l10n: lookupAppLocalizations(language),
+      format: format,
     );
     final bytes = await document.save();
     File('$_previewDir/$fileName').writeAsBytesSync(bytes);
@@ -112,6 +118,25 @@ void main() {
 
   test('a typical order fits on one page', () async {
     expect(await buildAndSave(_order(), 'os_typical.pdf'), 1);
+  });
+
+  test('English labels with US formats', () async {
+    final pages = await buildAndSave(
+      _order(),
+      'os_typical_en_us.pdf',
+      language: const Locale('en'),
+      format: RegionFormat.unitedStates,
+    );
+    expect(pages, 1);
+  });
+
+  test('English labels with Brazilian formats', () async {
+    final pages = await buildAndSave(
+      _order(parts: 40),
+      'os_long_en_br.pdf',
+      language: const Locale('en'),
+    );
+    expect(pages, 2);
   });
 
   test('an empty order (all fields blank) still renders', () async {

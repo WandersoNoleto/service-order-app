@@ -47,20 +47,33 @@ String formatDate(DateTime? date) {
   return '$day/$month/${date.year}';
 }
 
-const _months = [
+const _monthsPt = [
   'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
 ];
 
-/// Section title for a day in the history: "Hoje", "Ontem" or
-/// "25 de outubro de 2026". [now] exists for tests.
-String formatDayLabel(DateTime date, {DateTime? now}) {
-  final today = _dayNumber(now ?? DateTime.now());
-  final daysAgo = today - _dayNumber(date);
+const _monthsEn = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
 
-  if (daysAgo == 0) return 'Hoje';
-  if (daysAgo == 1) return 'Ontem';
-  return '${date.day} de ${_months[date.month - 1]} de ${date.year}';
+/// Section title for a day in the history, in the app language:
+/// [today], [yesterday] or the full date ("25 de outubro de 2026" /
+/// "October 25, 2026"). [now] exists for tests.
+String formatDayLabel(
+  DateTime date, {
+  required String languageCode,
+  required String today,
+  required String yesterday,
+  DateTime? now,
+}) {
+  final daysAgo = _dayNumber(now ?? DateTime.now()) - _dayNumber(date);
+
+  if (daysAgo == 0) return today;
+  if (daysAgo == 1) return yesterday;
+  return languageCode == 'pt'
+      ? '${date.day} de ${_monthsPt[date.month - 1]} de ${date.year}'
+      : '${_monthsEn[date.month - 1]} ${date.day}, ${date.year}';
 }
 
 /// Calendar day as a number (UTC, so daylight saving never shifts it).

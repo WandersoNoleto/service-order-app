@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
-import '../../core/formatting/formatters.dart';
+import '../../core/formatting/region_format.dart';
+import '../../core/preferences/app_preferences.dart';
+import '../../l10n/app_localizations.dart';
 import 'data/service_order.dart';
 import 'widgets/form_fields.dart';
 
@@ -42,7 +44,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   late final _invoiceNumber = _text(_initial.invoiceNumber);
   late final _servicesPerformed = _text(_initial.servicesPerformed);
   late final _notes = _text(_initial.notes);
-  late final _labor = _text(_moneyText(_initial.laborCents));
+  late final _labor = _text(_moneyText(_initial.laborCents, _format));
 
   late bool? _underWarranty = _initial.underWarranty;
   late DateTime? _calledAt = _initial.calledAt;
@@ -52,13 +54,16 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   late bool? _equipmentOk = _initial.equipmentOk;
 
   late final List<_ItemFields> _items = [
-    for (final item in _initial.items) _ItemFields(item, _onChanged),
+    for (final item in _initial.items) _ItemFields(item, _onChanged, _format),
   ];
 
   bool _dirty = false;
   bool _saving = false;
 
   bool get _isEditing => widget.initialOrder != null;
+
+  /// Regional format (Settings) for money typed in this form.
+  RegionFormat get _format => widget.dependencies.preferences.format;
 
   @override
   void dispose() {
@@ -88,7 +93,8 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     });
   }
 
-  void _addItem() => _set(() => _items.add(_ItemFields(null, _onChanged)));
+  void _addItem() =>
+      _set(() => _items.add(_ItemFields(null, _onChanged, _format)));
 
   void _removeItem(_ItemFields item) {
     _set(() => _items.remove(item));
@@ -99,7 +105,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   int get _partsTotalCents =>
       _items.fold(0, (sum, item) => sum + (item.toItem()?.totalCents ?? 0));
 
-  int get _laborCents => parseCents(_labor.text) ?? 0;
+  int get _laborCents => _format.parseMoney(_labor.text) ?? 0;
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
@@ -109,7 +115,8 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     final deps = widget.dependencies;
     final responsible = _isEditing
         ? _initial.responsibleName
-        : (await deps.settings.companyProfile(deps.config)).responsibleName;
+        : (await deps.settings.companyProfile(deps.companyDefaults))
+            .responsibleName;
 
     final order = ServiceOrder(
       id: _initial.id,
@@ -164,22 +171,23 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     );
     if (other == null || !mounted) return true;
 
-    final customer =
-        other.customerName.isEmpty ? '' : ', de ${other.customerName}';
+    final l10n = AppLocalizations.of(context);
+    final message = other.customerName.isEmpty
+        ? l10n.duplicateNumberMessage(number)
+        : l10n.duplicateNumberMessageWithCustomer(number, other.customerName);
     return _confirm(
-      title: 'Número já usado',
-      message: 'Já existe a ordem de serviço nº $number$customer. '
-          'Salvar mesmo assim?',
-      action: 'Salvar mesmo assim',
+      title: l10n.duplicateNumberTitle,
+      message: message,
+      action: l10n.saveAnyway,
     );
   }
 
   /// Back button with unsaved changes asks before discarding them.
   Future<void> _onPopBlocked() async {
     final discard = await _confirm(
-      title: 'Descartar alterações?',
-      message: 'O que você preencheu não foi salvo.',
-      action: 'Descartar',
+      title: AppLocalizations.of(context).discardChangesTitle,
+      message: AppLocalizations.of(context).discardOrderMessage,
+      action: AppLocalizations.of(context).discard,
     );
     if (discard && mounted) Navigator.of(context).pop();
   }
@@ -197,7 +205,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -211,35 +219,36 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _onPopBlocked();
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(_isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço')),
+        appBar: AppBar(title: Text(_isEditing ? l10n.editOrderTitle : l10n.newOrderTitle)),
         body: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               FormSection(
-                title: 'Ordem de serviço',
+                title: l10n.sectionOrder,
                 children: [
-                  _field(_orderNumber, 'Nº da ordem de serviço'),
+                  _field(_orderNumber, l10n.orderNumberField),
                 ],
               ),
               FormSection(
-                title: 'Cliente',
+                title: l10n.sectionCustomer,
                 children: [
-                  _field(_customerName, 'Cliente'),
-                  _field(_customerDocument, 'CPF/CNPJ'),
-                  _field(_customerAddress, 'Endereço'),
+                  _field(_customerName, l10n.customer),
+                  _field(_customerDocument, l10n.customerDocument),
+                  _field(_customerAddress, l10n.address),
                   Row(
                     spacing: 12,
                     children: [
-                      Expanded(flex: 3, child: _field(_customerCity, 'Cidade')),
-                      Expanded(child: _field(_customerState, 'Estado')),
+                      Expanded(flex: 3, child: _field(_customerCity, l10n.city)),
+                      Expanded(child: _field(_customerState, l10n.state)),
                     ],
                   ),
                   Row(
@@ -248,14 +257,14 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
                       Expanded(
                         child: _field(
                           _customerContact,
-                          'Contato',
+                          l10n.contact,
                           keyboard: TextInputType.phone,
                         ),
                       ),
                       Expanded(
                         child: _field(
                           _customerZip,
-                          'CEP',
+                          l10n.zip,
                           keyboard: TextInputType.number,
                         ),
                       ),
@@ -264,16 +273,16 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
                 ],
               ),
               FormSection(
-                title: 'Atendimento',
+                title: l10n.sectionServiceCall,
                 children: [
-                  _field(_invoiceNumber, 'N.F.'),
+                  _field(_invoiceNumber, l10n.invoice),
                   YesNoField(
-                    label: 'Garantia',
+                    label: l10n.warranty,
                     value: _underWarranty,
                     onChanged: (v) => _set(() => _underWarranty = v),
                   ),
                   DateField(
-                    label: 'Chamado',
+                    label: l10n.calledAt,
                     value: _calledAt,
                     onChanged: (v) => _set(() => _calledAt = v),
                   ),
@@ -282,14 +291,14 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
                     children: [
                       Expanded(
                         child: DateField(
-                          label: 'Marcado p/',
+                          label: l10n.scheduledFor,
                           value: _scheduledFor,
                           onChanged: (v) => _set(() => _scheduledFor = v),
                         ),
                       ),
                       Expanded(
                         child: TimeField(
-                          label: 'Horário',
+                          label: l10n.scheduledTime,
                           value: _scheduledTime,
                           onChanged: (v) => _set(() => _scheduledTime = v),
                         ),
@@ -297,25 +306,25 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
                     ],
                   ),
                   DateField(
-                    label: 'Instalado em',
+                    label: l10n.installedAt,
                     value: _installedAt,
                     onChanged: (v) => _set(() => _installedAt = v),
                   ),
                 ],
               ),
               FormSection(
-                title: 'Serviços executados',
+                title: l10n.sectionServicesPerformed,
                 children: [
                   _field(
                     _servicesPerformed,
-                    'Descrição',
+                    l10n.description,
                     lines: 4,
                     maxLength: ServiceOrder.servicesPerformedMaxLength,
                   ),
                 ],
               ),
               FormSection(
-                title: 'Peças',
+                title: l10n.sectionParts,
                 children: [
                   for (final (index, item) in _items.indexed)
                     _ItemCard(
@@ -327,46 +336,45 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
                   OutlinedButton.icon(
                     onPressed: _addItem,
                     icon: const Icon(Icons.add),
-                    label: const Text('Adicionar peça'),
+                    label: Text(l10n.addPart),
                   ),
                 ],
               ),
               FormSection(
-                title: 'Valores',
+                title: l10n.sectionValues,
                 children: [
-                  _TotalRow(label: 'Total peças', cents: _partsTotalCents),
+                  _TotalRow(label: l10n.partsTotal, cents: _partsTotalCents),
                   _field(
                     _labor,
-                    'Serviço (R\$)',
+                    l10n.laborField(_format.currencySymbol),
                     keyboard: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    validator: validateMoney,
+                    validator: (text) => validateMoney(text, _format, l10n),
                   ),
                   _TotalRow(
-                    label: 'TOTAL',
+                    label: l10n.total,
                     cents: _partsTotalCents + _laborCents,
                     emphasized: true,
                   ),
                 ],
               ),
               FormSection(
-                title: 'Observações',
+                title: l10n.sectionNotes,
                 children: [
                   _field(
                     _notes,
-                    'Observações',
+                    l10n.notes,
                     lines: 3,
                     maxLength: ServiceOrder.notesMaxLength,
                   ),
                 ],
               ),
               FormSection(
-                title: 'Conclusão',
+                title: l10n.sectionConclusion,
                 children: [
                   YesNoField(
-                    label: 'O equipamento foi consertado e revisado, estando '
-                        'em perfeitas condições de funcionamento?',
+                    label: l10n.equipmentOkQuestion,
                     value: _equipmentOk,
                     onChanged: (v) => _set(() => _equipmentOk = v),
                   ),
@@ -381,7 +389,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
             child: FilledButton.icon(
               onPressed: _saving ? null : _save,
               icon: const Icon(Icons.save_outlined),
-              label: Text(_saving ? 'Salvando…' : 'Salvar ordem de serviço'),
+              label: Text(_saving ? l10n.saving : l10n.saveOrder),
             ),
           ),
         ),
@@ -413,12 +421,12 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
 
 /// Text controllers for one row of the parts table.
 class _ItemFields {
-  _ItemFields(ServiceOrderItem? item, VoidCallback onChanged)
+  _ItemFields(ServiceOrderItem? item, VoidCallback onChanged, this.format)
       : quantity = TextEditingController(text: '${item?.quantity ?? 1}'),
         code = TextEditingController(text: item?.code ?? ''),
         description = TextEditingController(text: item?.description ?? ''),
         unitPrice = TextEditingController(
-          text: item == null ? '' : _moneyText(item.unitPriceCents),
+          text: item == null ? '' : _moneyText(item.unitPriceCents, format),
         ) {
     for (final controller in _all) {
       _onTextChanged(controller, onChanged);
@@ -429,6 +437,9 @@ class _ItemFields {
   final TextEditingController code;
   final TextEditingController description;
   final TextEditingController unitPrice;
+
+  /// Regional format used to read the price typed by the user.
+  final RegionFormat format;
 
   List<TextEditingController> get _all => [quantity, code, description, unitPrice];
 
@@ -441,7 +452,7 @@ class _ItemFields {
   /// Null while quantity or price are invalid.
   ServiceOrderItem? toItem() {
     final qty = int.tryParse(quantity.text.trim());
-    final price = parseCents(unitPrice.text);
+    final price = format.parseMoney(unitPrice.text);
     if (qty == null || price == null) return null;
 
     return ServiceOrderItem(
@@ -473,6 +484,7 @@ class _ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final total = fields.toItem()?.totalCents;
 
     return Card.outlined(
@@ -484,9 +496,9 @@ class _ItemCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text('Peça ${index + 1}')),
+                Expanded(child: Text(l10n.partNumber(index + 1))),
                 IconButton(
-                  tooltip: 'Remover peça',
+                  tooltip: l10n.removePart,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: onRemove,
                 ),
@@ -499,7 +511,7 @@ class _ItemCard extends StatelessWidget {
                 children: [
                   TextFormField(
                     controller: fields.description,
-                    decoration: const InputDecoration(labelText: 'Nome da peça'),
+                    decoration: InputDecoration(labelText: l10n.partName),
                     textCapitalization: TextCapitalization.sentences,
                   ),
                   Row(
@@ -508,11 +520,14 @@ class _ItemCard extends StatelessWidget {
                       Expanded(
                         child: TextFormField(
                           controller: fields.quantity,
-                          decoration: const InputDecoration(labelText: 'Quant.'),
+                          decoration:
+                              InputDecoration(labelText: l10n.quantityShort),
                           keyboardType: TextInputType.number,
                           validator: (text) {
                             final qty = int.tryParse(text?.trim() ?? '');
-                            return qty == null || qty <= 0 ? 'Inválida' : null;
+                            return qty == null || qty <= 0
+                                ? l10n.invalidQuantity
+                                : null;
                           },
                         ),
                       ),
@@ -520,7 +535,7 @@ class _ItemCard extends StatelessWidget {
                         flex: 2,
                         child: TextFormField(
                           controller: fields.code,
-                          decoration: const InputDecoration(labelText: 'Código'),
+                          decoration: InputDecoration(labelText: l10n.code),
                         ),
                       ),
                     ],
@@ -531,18 +546,23 @@ class _ItemCard extends StatelessWidget {
                       Expanded(
                         child: TextFormField(
                           controller: fields.unitPrice,
-                          decoration: const InputDecoration(
-                            labelText: 'Valor unit. (R\$)',
+                          decoration: InputDecoration(
+                            labelText: l10n.unitPriceField(
+                              fields.format.currencySymbol,
+                            ),
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
-                          validator: validateMoney,
+                          validator: (text) =>
+                              validateMoney(text, fields.format, l10n),
                         ),
                       ),
                       Expanded(
                         child: Text(
-                          total == null ? '—' : 'Total: R\$ ${formatCents(total)}',
+                          total == null
+                              ? '—'
+                              : l10n.lineTotal(fields.format.money(total)),
                           textAlign: TextAlign.end,
                         ),
                       ),
@@ -577,7 +597,7 @@ class _TotalRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(child: Text(label, style: style)),
-        Text('R\$ ${formatCents(cents)}', style: style),
+        Text(context.format.money(cents), style: style),
       ],
     );
   }
@@ -594,5 +614,6 @@ void _onTextChanged(TextEditingController controller, VoidCallback onChanged) {
   });
 }
 
-/// Initial text for a money field: empty instead of "0,00".
-String _moneyText(int cents) => cents == 0 ? '' : formatCents(cents);
+/// Initial text for a money field: empty instead of "0,00" / "0.00".
+String _moneyText(int cents, RegionFormat format) =>
+    cents == 0 ? '' : format.amount(cents);

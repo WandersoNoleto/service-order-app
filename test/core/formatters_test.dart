@@ -31,26 +31,41 @@ void main() {
     expect(formatDate(DateTime(2026, 3, 5)), '05/03/2026');
   });
 
+  String pt(DateTime date, DateTime now) => formatDayLabel(
+        date,
+        languageCode: 'pt',
+        today: 'Hoje',
+        yesterday: 'Ontem',
+        now: now,
+      );
+
+  String en(DateTime date, DateTime now) => formatDayLabel(
+        date,
+        languageCode: 'en',
+        today: 'Today',
+        yesterday: 'Yesterday',
+        now: now,
+      );
+
   test('formatDayLabel uses today, yesterday and full dates', () {
     final now = DateTime(2026, 11, 3, 8);
 
-    expect(formatDayLabel(DateTime(2026, 11, 3, 23, 59), now: now), 'Hoje');
-    expect(formatDayLabel(DateTime(2026, 11, 2, 0, 1), now: now), 'Ontem');
-    expect(
-      formatDayLabel(DateTime(2026, 10, 25, 14), now: now),
-      '25 de outubro de 2026',
-    );
-    expect(
-      formatDayLabel(DateTime(2025, 3, 1), now: now),
-      '1 de março de 2025',
-    );
+    expect(pt(DateTime(2026, 11, 3, 23, 59), now), 'Hoje');
+    expect(pt(DateTime(2026, 11, 2, 0, 1), now), 'Ontem');
+    expect(pt(DateTime(2026, 10, 25, 14), now), '25 de outubro de 2026');
+    expect(pt(DateTime(2025, 3, 1), now), '1 de março de 2025');
+  });
+
+  test('formatDayLabel in English', () {
+    final now = DateTime(2026, 11, 3, 8);
+
+    expect(en(DateTime(2026, 11, 3), now), 'Today');
+    expect(en(DateTime(2026, 11, 2), now), 'Yesterday');
+    expect(en(DateTime(2026, 10, 25), now), 'October 25, 2026');
   });
 
   test('formatDayLabel handles month and year boundaries', () {
-    expect(
-      formatDayLabel(DateTime(2026, 12, 31), now: DateTime(2027, 1, 1)),
-      'Ontem',
-    );
+    expect(pt(DateTime(2026, 12, 31), DateTime(2027, 1, 1)), 'Ontem');
   });
 
   test('formatTime', () {

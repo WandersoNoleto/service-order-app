@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/formatting/formatters.dart';
+import '../../../core/formatting/region_format.dart';
+import '../../../core/preferences/app_preferences.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Titled card that groups related fields ("Cliente", "Atendimento"…).
 class FormSection extends StatelessWidget {
@@ -52,9 +54,15 @@ class YesNoField extends StatelessWidget {
       children: [
         Text(label),
         SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(value: true, label: Text('Sim')),
-            ButtonSegment(value: false, label: Text('Não')),
+          segments: [
+            ButtonSegment(
+              value: true,
+              label: Text(AppLocalizations.of(context).yes),
+            ),
+            ButtonSegment(
+              value: false,
+              label: Text(AppLocalizations.of(context).no),
+            ),
           ],
           selected: selected == null ? const {} : {selected},
           emptySelectionAllowed: true,
@@ -94,7 +102,7 @@ class DateField extends StatelessWidget {
   Widget build(BuildContext context) {
     return _PickerField(
       label: label,
-      text: formatDate(value),
+      text: context.format.date(value),
       icon: Icons.calendar_today_outlined,
       onTap: () => _pick(context),
       onClear: value == null ? null : () => onChanged(null),
@@ -134,7 +142,8 @@ class TimeField extends StatelessWidget {
   Widget build(BuildContext context) {
     return _PickerField(
       label: label,
-      text: value ?? '',
+      // Stored as "HH:mm"; shown in the regional format ("2:30 PM").
+      text: value == null ? '' : context.format.time(value!),
       icon: Icons.schedule_outlined,
       onTap: () => _pick(context),
       onClear: value == null ? null : () => onChanged(null),
@@ -168,7 +177,7 @@ class _PickerField extends StatelessWidget {
           suffixIcon: onClear == null
               ? null
               : IconButton(
-                  tooltip: 'Limpar',
+                  tooltip: AppLocalizations.of(context).clear,
                   icon: const Icon(Icons.close),
                   onPressed: onClear,
                 ),
@@ -181,5 +190,9 @@ class _PickerField extends StatelessWidget {
 }
 
 /// Validator for money fields (accepts empty as zero).
-String? validateMoney(String? text) =>
-    parseCents(text ?? '') == null ? 'Valor inválido' : null;
+String? validateMoney(
+  String? text,
+  RegionFormat format,
+  AppLocalizations l10n,
+) =>
+    format.parseMoney(text ?? '') == null ? l10n.invalidAmount : null;

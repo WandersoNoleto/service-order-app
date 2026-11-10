@@ -5,6 +5,7 @@ import 'app/app.dart';
 import 'app/app_dependencies.dart';
 import 'core/config/client_config.dart';
 import 'core/database/app_database.dart';
+import 'core/preferences/app_preferences.dart';
 import 'core/storage/logo_storage.dart';
 import 'features/document/service_order_documents.dart';
 import 'features/service_order/data/service_order_repository.dart';
@@ -19,17 +20,20 @@ Future<void> main() async {
   final config = ClientConfig.fromEnvironment();
   final database = await AppDatabase.open();
   final logos = LogoStorage();
+  final settings = SettingsRepository(database);
+  final preferences = await AppPreferences.load(settings);
 
   runApp(
     ServiceOrderApp(
       dependencies: AppDependencies(
         config: config,
         orders: ServiceOrderRepository(database),
-        settings: SettingsRepository(database),
+        settings: settings,
         documents: ServiceOrderDocuments(logos),
         logos: logos,
         updates: UpdateChecker(channel: config.channel),
         installer: UpdateInstaller(),
+        preferences: preferences,
         // Debug builds take their version from pubspec.yaml, so a published
         // client build (x.y.z-<client>.N) always looks newer and the prompt would
         // show on every `flutter run`.

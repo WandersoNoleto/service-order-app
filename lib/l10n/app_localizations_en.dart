@@ -1,0 +1,550 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Service Orders';
+
+  @override
+  String get navHistory => 'History';
+
+  @override
+  String get navSettings => 'Settings';
+
+  @override
+  String get navCreate => 'Create';
+
+  @override
+  String get navCreateSemantic => 'Create service order';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get saving => 'Saving…';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get tryAgain => 'Try again';
+
+  @override
+  String couldNotComplete(String error) {
+    return 'Couldn\'t complete: $error';
+  }
+
+  @override
+  String get historySearchHint => 'Search by customer or order number';
+
+  @override
+  String get historyNoResults => 'No service orders found';
+
+  @override
+  String get historyEmptyTitle => 'No service orders yet';
+
+  @override
+  String get historyEmptyBody =>
+      'Tap \"Create\" to issue your first service order.';
+
+  @override
+  String get orderNoNumber => 'No number';
+
+  @override
+  String get customerNotInformed => 'No customer';
+
+  @override
+  String get newOrderTitle => 'New service order';
+
+  @override
+  String get editOrderTitle => 'Edit service order';
+
+  @override
+  String get saveOrder => 'Save service order';
+
+  @override
+  String get sectionOrder => 'Service order';
+
+  @override
+  String get orderNumberField => 'Service order number';
+
+  @override
+  String get sectionCustomer => 'Customer';
+
+  @override
+  String get customer => 'Customer';
+
+  @override
+  String get customerDocument => 'Tax ID';
+
+  @override
+  String get address => 'Address';
+
+  @override
+  String get city => 'City';
+
+  @override
+  String get state => 'State';
+
+  @override
+  String get contact => 'Contact';
+
+  @override
+  String get zip => 'ZIP code';
+
+  @override
+  String get sectionServiceCall => 'Service call';
+
+  @override
+  String get invoice => 'Invoice';
+
+  @override
+  String get warranty => 'Warranty';
+
+  @override
+  String get calledAt => 'Called on';
+
+  @override
+  String get scheduledFor => 'Scheduled for';
+
+  @override
+  String get scheduledTime => 'Time';
+
+  @override
+  String get installedAt => 'Installed on';
+
+  @override
+  String get sectionServicesPerformed => 'Services performed';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get sectionParts => 'Parts';
+
+  @override
+  String get addPart => 'Add part';
+
+  @override
+  String partNumber(int number) {
+    return 'Part $number';
+  }
+
+  @override
+  String get removePart => 'Remove part';
+
+  @override
+  String get partName => 'Part name';
+
+  @override
+  String get quantityShort => 'Qty';
+
+  @override
+  String get invalidQuantity => 'Invalid';
+
+  @override
+  String get code => 'Code';
+
+  @override
+  String unitPriceField(String symbol) {
+    return 'Unit price ($symbol)';
+  }
+
+  @override
+  String lineTotal(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get sectionValues => 'Amounts';
+
+  @override
+  String get partsTotal => 'Parts total';
+
+  @override
+  String laborField(String symbol) {
+    return 'Labor ($symbol)';
+  }
+
+  @override
+  String get total => 'TOTAL';
+
+  @override
+  String get sectionNotes => 'Notes';
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get sectionConclusion => 'Conclusion';
+
+  @override
+  String get equipmentOkQuestion =>
+      'Was the equipment repaired, checked and left in perfect working order?';
+
+  @override
+  String get invalidAmount => 'Invalid amount';
+
+  @override
+  String get duplicateNumberTitle => 'Number already used';
+
+  @override
+  String duplicateNumberMessage(String number) {
+    return 'Service order $number already exists. Save anyway?';
+  }
+
+  @override
+  String duplicateNumberMessageWithCustomer(String number, String customer) {
+    return 'Service order $number already exists, for $customer. Save anyway?';
+  }
+
+  @override
+  String get saveAnyway => 'Save anyway';
+
+  @override
+  String get discardChangesTitle => 'Discard changes?';
+
+  @override
+  String get discardOrderMessage => 'What you filled in hasn\'t been saved.';
+
+  @override
+  String get discardCompanyMessage => 'Your changes haven\'t been saved.';
+
+  @override
+  String get orderTitle => 'Service order';
+
+  @override
+  String orderTitleWithNumber(String number) {
+    return 'Service order $number';
+  }
+
+  @override
+  String get sendPdf => 'Send PDF';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get print => 'Print';
+
+  @override
+  String documentError(String error) {
+    return 'Couldn\'t generate the document:\n$error';
+  }
+
+  @override
+  String get deleteOrderTitle => 'Delete this service order?';
+
+  @override
+  String get deleteOrderMessage =>
+      'It will be removed from the history. This can\'t be undone.';
+
+  @override
+  String get companyCardTitle => 'Company';
+
+  @override
+  String get companyCardFooter =>
+      'This information appears on the header of every service order.';
+
+  @override
+  String get rowName => 'Name';
+
+  @override
+  String get rowDocument => 'Tax ID';
+
+  @override
+  String get rowPhone => 'Phone';
+
+  @override
+  String get rowAddress => 'Address';
+
+  @override
+  String get rowCity => 'City';
+
+  @override
+  String get rowResponsible => 'Responsible';
+
+  @override
+  String get notConfigured =>
+      'App started without a client configuration. Run with --dart-define-from-file=clients/<folder>/config.json.';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String versionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get upToDate => 'You\'re on the latest version.';
+
+  @override
+  String get languageAndFormat => 'Language and format';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get languageSystem => 'Automatic (phone)';
+
+  @override
+  String get languagePortuguese => 'Português';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get region => 'Regional format';
+
+  @override
+  String get regionHint => 'Currency, dates and times';
+
+  @override
+  String get regionSystem => 'Automatic (phone)';
+
+  @override
+  String get regionBrazil => 'Brazil';
+
+  @override
+  String get regionUnitedStates => 'United States';
+
+  @override
+  String get sampleCompanyName => 'Example Company';
+
+  @override
+  String get sampleCompanyDocument => '00-0000000';
+
+  @override
+  String get sampleCompanyPhone => '(000) 000-0000';
+
+  @override
+  String get sampleCompanyAddress => '100 Example Street';
+
+  @override
+  String get sampleCompanyCity => 'Example City';
+
+  @override
+  String get sampleCompanyState => 'ST';
+
+  @override
+  String get sampleResponsible => 'John Doe';
+
+  @override
+  String get companyFormTitle => 'Company details';
+
+  @override
+  String get restoreAllDefaults => 'Restore all defaults';
+
+  @override
+  String get restoreAllTitle => 'Restore everything?';
+
+  @override
+  String get restoreAllMessage =>
+      'All data and the logo go back to the app\'s defaults.';
+
+  @override
+  String get companyNameField => 'Company name';
+
+  @override
+  String get companyNameRequired => 'Enter the company name';
+
+  @override
+  String get companyDocumentField => 'Tax ID';
+
+  @override
+  String get phoneWhatsapp => 'Phone / WhatsApp';
+
+  @override
+  String get stateShort => 'State';
+
+  @override
+  String get responsible => 'Responsible';
+
+  @override
+  String defaultValue(String value) {
+    return 'Default: $value';
+  }
+
+  @override
+  String get emptyValue => '(empty)';
+
+  @override
+  String get restoreDefault => 'Restore default';
+
+  @override
+  String get logo => 'Logo';
+
+  @override
+  String get noLogo => 'No logo yet';
+
+  @override
+  String get changeLogo => 'Change logo';
+
+  @override
+  String get removeLogo => 'Remove logo';
+
+  @override
+  String get useDefaultLogo => 'Use default logo';
+
+  @override
+  String couldNotLoadImage(String error) {
+    return 'Couldn\'t load the image: $error';
+  }
+
+  @override
+  String get newVersionTitle => 'New version available';
+
+  @override
+  String newVersionMessage(String version) {
+    return 'Version v$version of the app is available.\n\nTap \"Update\" to install the latest improvements.';
+  }
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get update => 'Update';
+
+  @override
+  String get releaseNotes => 'Release notes';
+
+  @override
+  String get downloadingUpdate => 'Downloading update';
+
+  @override
+  String get starting => 'Starting…';
+
+  @override
+  String get updateOffline => 'Can\'t reach the update server.';
+
+  @override
+  String updateServerError(int code) {
+    return 'The update server answered $code.';
+  }
+
+  @override
+  String get installPermission =>
+      'Allow this app to install updates: Android Settings > Apps > this app > Install unknown apps. Then try again.';
+
+  @override
+  String get installDownloadFailed =>
+      'Couldn\'t download the update. Check the internet connection and try again.';
+
+  @override
+  String get installCanceled => 'Update canceled.';
+
+  @override
+  String get installAlreadyRunning => 'An update is already in progress.';
+
+  @override
+  String installError(String detail) {
+    return 'Couldn\'t install the update ($detail).';
+  }
+
+  @override
+  String pdfDocumentTitle(String number) {
+    return 'Service Order $number';
+  }
+
+  @override
+  String get pdfFilePrefix => 'SO';
+
+  @override
+  String get pdfCompanyDocument => 'Tax ID';
+
+  @override
+  String get pdfResponsible => 'Responsible';
+
+  @override
+  String pdfContinuation(String company) {
+    return '$company · continued';
+  }
+
+  @override
+  String pdfContinuationWithNumber(String company, String number) {
+    return '$company · SO $number · continued';
+  }
+
+  @override
+  String pdfPage(int page, int total) {
+    return 'Page $page/$total';
+  }
+
+  @override
+  String get pdfTechnicalAssistance => 'TECHNICAL SERVICE';
+
+  @override
+  String get pdfOrderNumber => 'SERVICE ORDER No.:';
+
+  @override
+  String get pdfServicesPerformed => 'Services Performed';
+
+  @override
+  String get pdfPartName => 'PART NAME';
+
+  @override
+  String get pdfUnitPrice => 'Unit Price';
+
+  @override
+  String get pdfLineTotal => 'Total';
+
+  @override
+  String get pdfPartsTotal => 'PARTS';
+
+  @override
+  String get pdfLabor => 'LABOR';
+
+  @override
+  String get pdfSignatureApproval => 'APPROVED';
+
+  @override
+  String get pdfSignatureDate => 'DATE';
+
+  @override
+  String get pdfSignatureTechnician => 'TECHNICIAN';
+
+  @override
+  String get pdfSignatureCustomer => 'CUSTOMER';
+
+  @override
+  String get pdfEquipmentOk =>
+      'The equipment was repaired, checked and left in perfect working order';
+}
