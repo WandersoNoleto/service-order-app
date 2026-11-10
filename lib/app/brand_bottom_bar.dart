@@ -30,7 +30,7 @@ class BrandBottomBarAction {
   final String? semanticLabel;
 }
 
-/// Bottom navigation with a brand-colored line above the selected tab
+/// Bottom navigation that marks the selected tab with the brand color
 /// (instead of Material 3's pill indicator) and an optional raised action
 /// button between the tabs. Colors come from the theme, so each client gets
 /// its own brand color.
@@ -191,27 +191,15 @@ class _BarItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 4,
           children: [
-            // Selection indicator: brand line on the top edge.
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 3,
-              color: selected ? theme.colorScheme.primary : Colors.transparent,
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 4,
-                children: [
-                  Icon(selected ? item.selectedIcon : item.icon, color: color),
-                  Text(
-                    item.label,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: color,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ],
+            Icon(selected ? item.selectedIcon : item.icon, color: color),
+            Text(
+              item.label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: color,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],

@@ -13,13 +13,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get appTitle => 'Ordens de Serviço';
 
   @override
-  String get navHistory => 'Histórico';
+  String get navHistory => 'Ordens';
 
   @override
-  String get navSettings => 'Configurações';
+  String get navSettings => 'Ajustes';
 
   @override
-  String get navCreate => 'Criar';
+  String get navCreate => 'Nova ordem';
 
   @override
   String get navCreateSemantic => 'Criar ordem de serviço';
@@ -69,7 +69,36 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get historySearchHint => 'Buscar por cliente ou nº da OS';
+  String get historySearchHint => 'Cliente, número ou serviço';
+
+  @override
+  String get historyTitle => 'Ordens de serviço';
+
+  @override
+  String get filterAll => 'Todas';
+
+  @override
+  String get filterLast7Days => '7 dias';
+
+  @override
+  String get filterThisMonth => 'Este mês';
+
+  @override
+  String ordersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ordens',
+      one: '1 ordem',
+      zero: 'Nenhuma ordem',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orderNumberShort(String number) {
+    return 'Nº $number';
+  }
 
   @override
   String get historyNoResults => 'Nenhuma ordem de serviço encontrada';
@@ -79,7 +108,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get historyEmptyBody =>
-      'Toque em \"Criar\" para emitir a primeira ordem de serviço.';
+      'Toque em \"Nova ordem\" para emitir a primeira ordem de serviço.';
 
   @override
   String get orderNoNumber => 'Sem número';

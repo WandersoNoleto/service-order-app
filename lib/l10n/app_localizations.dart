@@ -107,19 +107,19 @@ abstract class AppLocalizations {
   /// No description provided for @navHistory.
   ///
   /// In pt, this message translates to:
-  /// **'Histórico'**
+  /// **'Ordens'**
   String get navHistory;
 
   /// No description provided for @navSettings.
   ///
   /// In pt, this message translates to:
-  /// **'Configurações'**
+  /// **'Ajustes'**
   String get navSettings;
 
   /// No description provided for @navCreate.
   ///
   /// In pt, this message translates to:
-  /// **'Criar'**
+  /// **'Nova ordem'**
   String get navCreate;
 
   /// No description provided for @navCreateSemantic.
@@ -215,8 +215,44 @@ abstract class AppLocalizations {
   /// No description provided for @historySearchHint.
   ///
   /// In pt, this message translates to:
-  /// **'Buscar por cliente ou nº da OS'**
+  /// **'Cliente, número ou serviço'**
   String get historySearchHint;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordens de serviço'**
+  String get historyTitle;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas'**
+  String get filterAll;
+
+  /// No description provided for @filterLast7Days.
+  ///
+  /// In pt, this message translates to:
+  /// **'7 dias'**
+  String get filterLast7Days;
+
+  /// No description provided for @filterThisMonth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este mês'**
+  String get filterThisMonth;
+
+  /// No description provided for @ordersCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhuma ordem} =1{1 ordem} other{{count} ordens}}'**
+  String ordersCount(int count);
+
+  /// No description provided for @orderNumberShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nº {number}'**
+  String orderNumberShort(String number);
 
   /// No description provided for @historyNoResults.
   ///
@@ -233,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @historyEmptyBody.
   ///
   /// In pt, this message translates to:
-  /// **'Toque em \"Criar\" para emitir a primeira ordem de serviço.'**
+  /// **'Toque em \"Nova ordem\" para emitir a primeira ordem de serviço.'**
   String get historyEmptyBody;
 
   /// No description provided for @orderNoNumber.

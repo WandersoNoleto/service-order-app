@@ -3,9 +3,9 @@
 
   "appTitle": "Ordens de Serviço",
 
-  "navHistory": "Histórico",
-  "navSettings": "Configurações",
-  "navCreate": "Criar",
+  "navHistory": "Ordens",
+  "navSettings": "Ajustes",
+  "navCreate": "Nova ordem",
   "navCreateSemantic": "Criar ordem de serviço",
 
   "today": "Hoje",
@@ -24,10 +24,18 @@
   "couldNotComplete": "Não foi possível concluir: {error}",
   "@couldNotComplete": {"placeholders": {"error": {"type": "String"}}},
 
-  "historySearchHint": "Buscar por cliente ou nº da OS",
+  "historySearchHint": "Cliente, número ou serviço",
+  "historyTitle": "Ordens de serviço",
+  "filterAll": "Todas",
+  "filterLast7Days": "7 dias",
+  "filterThisMonth": "Este mês",
+  "ordersCount": "{count, plural, =0{Nenhuma ordem} =1{1 ordem} other{{count} ordens}}",
+  "@ordersCount": {"placeholders": {"count": {"type": "int"}}},
+  "orderNumberShort": "Nº {number}",
+  "@orderNumberShort": {"placeholders": {"number": {"type": "String"}}},
   "historyNoResults": "Nenhuma ordem de serviço encontrada",
   "historyEmptyTitle": "Nenhuma ordem de serviço emitida ainda",
-  "historyEmptyBody": "Toque em \"Criar\" para emitir a primeira ordem de serviço.",
+  "historyEmptyBody": "Toque em \"Nova ordem\" para emitir a primeira ordem de serviço.",
   "orderNoNumber": "Sem número",
   "customerNotInformed": "Cliente não informado",
 

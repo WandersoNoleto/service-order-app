@@ -13,13 +13,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Service Orders';
 
   @override
-  String get navHistory => 'History';
+  String get navHistory => 'Orders';
 
   @override
   String get navSettings => 'Settings';
 
   @override
-  String get navCreate => 'Create';
+  String get navCreate => 'New order';
 
   @override
   String get navCreateSemantic => 'Create service order';
@@ -69,7 +69,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get historySearchHint => 'Search by customer or order number';
+  String get historySearchHint => 'Customer, number or service';
+
+  @override
+  String get historyTitle => 'Service orders';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterLast7Days => '7 days';
+
+  @override
+  String get filterThisMonth => 'This month';
+
+  @override
+  String ordersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count orders',
+      one: '1 order',
+      zero: 'No orders',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orderNumberShort(String number) {
+    return 'No. $number';
+  }
 
   @override
   String get historyNoResults => 'No service orders found';
@@ -79,7 +108,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyEmptyBody =>
-      'Tap \"Create\" to issue your first service order.';
+      'Tap \"New order\" to issue your first service order.';
 
   @override
   String get orderNoNumber => 'No number';
