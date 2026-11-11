@@ -58,11 +58,13 @@ void main() {
     p.addListener(() => notified++);
     await p.setLanguage(LanguagePreference.english);
     await p.setRegion(RegionPreference.unitedStates);
-    expect(notified, 2);
+    await p.setTheme(ThemePreference.dark);
+    expect(notified, 3);
 
     final reloaded = await AppPreferences.load(settings);
     expect(reloaded.language, LanguagePreference.english);
     expect(reloaded.region, RegionPreference.unitedStates);
+    expect(reloaded.theme, ThemePreference.dark);
 
     // Back to automatic removes the saved value.
     await reloaded.setLanguage(LanguagePreference.system);

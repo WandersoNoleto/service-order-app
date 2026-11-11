@@ -13,13 +13,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Service Orders';
 
   @override
-  String get navHistory => 'History';
+  String get navHistory => 'Orders';
 
   @override
   String get navSettings => 'Settings';
 
   @override
-  String get navCreate => 'Create';
+  String get navCreate => 'New order';
 
   @override
   String get navCreateSemantic => 'Create service order';
@@ -49,6 +49,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
 
   @override
+  String get automatic => 'Automatic';
+
+  @override
+  String get draftNotSaved => 'Draft not saved';
+
+  @override
+  String get orderTotal => 'Total';
+
+  @override
+  String itemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+      zero: 'No items',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get delete => 'Delete';
 
   @override
@@ -69,7 +90,36 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get historySearchHint => 'Search by customer or order number';
+  String get historySearchHint => 'Customer, number or service';
+
+  @override
+  String get historyTitle => 'Service orders';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterLast7Days => '7 days';
+
+  @override
+  String get filterThisMonth => 'This month';
+
+  @override
+  String ordersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count orders',
+      one: '1 order',
+      zero: 'No orders',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String orderNumberShort(String number) {
+    return 'No. $number';
+  }
 
   @override
   String get historyNoResults => 'No service orders found';
@@ -79,7 +129,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get historyEmptyBody =>
-      'Tap \"Create\" to issue your first service order.';
+      'Tap \"New order\" to issue your first service order.';
 
   @override
   String get orderNoNumber => 'No number';
@@ -88,13 +138,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerNotInformed => 'No customer';
 
   @override
-  String get newOrderTitle => 'New service order';
+  String get newOrderTitle => 'New order';
 
   @override
-  String get editOrderTitle => 'Edit service order';
+  String get editOrderTitle => 'Edit order';
 
   @override
-  String get saveOrder => 'Save service order';
+  String get saveOrder => 'Review and create PDF';
 
   @override
   String get sectionOrder => 'Service order';
@@ -154,15 +204,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get description => 'Description';
 
   @override
-  String get sectionParts => 'Parts';
+  String get partsAndMaterials => 'Parts and materials';
+
+  @override
+  String get decreaseQuantity => 'Decrease quantity';
+
+  @override
+  String get increaseQuantity => 'Increase quantity';
+
+  @override
+  String totalsBreakdown(String parts, String labor) {
+    return 'Parts $parts · Labor $labor';
+  }
 
   @override
   String get addPart => 'Add part';
-
-  @override
-  String partNumber(int number) {
-    return 'Part $number';
-  }
 
   @override
   String get removePart => 'Remove part';
@@ -174,26 +230,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quantityShort => 'Qty';
 
   @override
-  String get invalidQuantity => 'Invalid';
-
-  @override
   String get code => 'Code';
 
   @override
   String unitPriceField(String symbol) {
     return 'Unit price ($symbol)';
   }
-
-  @override
-  String lineTotal(String amount) {
-    return 'Total: $amount';
-  }
-
-  @override
-  String get sectionValues => 'Amounts';
-
-  @override
-  String get partsTotal => 'Parts total';
 
   @override
   String laborField(String symbol) {
@@ -204,13 +246,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get total => 'TOTAL';
 
   @override
-  String get sectionNotes => 'Notes';
-
-  @override
   String get notes => 'Notes';
-
-  @override
-  String get sectionConclusion => 'Conclusion';
 
   @override
   String get equipmentOkQuestion =>
@@ -274,29 +310,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'It will be removed from the history. This can\'t be undone.';
 
   @override
-  String get companyCardTitle => 'Company';
+  String get companyCardFooter => 'This data appears on the PDF header';
 
   @override
-  String get companyCardFooter =>
-      'This information appears on the header of every service order.';
+  String get viewTemplate => 'View template';
 
   @override
-  String get rowName => 'Name';
+  String get settingsPreferences => 'Preferences';
 
   @override
-  String get rowDocument => 'Tax ID';
+  String get settingsData => 'Data';
 
   @override
-  String get rowPhone => 'Phone';
+  String get settingsApp => 'App';
 
   @override
-  String get rowAddress => 'Address';
+  String get backup => 'Backup';
 
   @override
-  String get rowCity => 'City';
+  String get backupNever => 'Last: never';
 
   @override
-  String get rowResponsible => 'Responsible';
+  String get recommended => 'Recommended';
+
+  @override
+  String get pdfFolder => 'PDF folder';
+
+  @override
+  String get updates => 'Updates';
+
+  @override
+  String get checkNow => 'Check';
+
+  @override
+  String get comingSoon => 'This feature is in development. Coming soon!';
 
   @override
   String get notConfigured =>
@@ -311,13 +358,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get checkForUpdates => 'Check for updates';
-
-  @override
   String get upToDate => 'You\'re on the latest version.';
-
-  @override
-  String get languageAndFormat => 'Language and format';
 
   @override
   String get language => 'Language';
@@ -335,9 +376,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get region => 'Regional format';
 
   @override
-  String get regionHint => 'Currency, dates and times';
-
-  @override
   String get regionSystem => 'Automatic (phone)';
 
   @override
@@ -345,6 +383,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get regionUnitedStates => 'United States';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeSystem => 'Automatic (phone)';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
 
   @override
   String get sampleCompanyName => 'Example Company';
@@ -402,9 +452,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String defaultValue(String value) {
     return 'Default: $value';
   }
-
-  @override
-  String get emptyValue => '(empty)';
 
   @override
   String get restoreDefault => 'Restore default';

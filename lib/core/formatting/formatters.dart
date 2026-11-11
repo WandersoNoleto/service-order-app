@@ -87,3 +87,9 @@ String formatTime(DateTime date) {
   final minute = date.minute.toString().padLeft(2, '0');
   return '$hour:$minute';
 }
+
+/// Month name in the app language, capitalized: "Novembro" / "November".
+String formatMonthName(DateTime date, {required String languageCode}) {
+  final name = (languageCode == 'pt' ? _monthsPt : _monthsEn)[date.month - 1];
+  return name[0].toUpperCase() + name.substring(1);
+}

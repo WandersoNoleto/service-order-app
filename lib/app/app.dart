@@ -15,7 +15,8 @@ class ServiceOrderApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final preferences = dependencies.preferences;
 
-    // Rebuilds when the language or regional format changes in Settings.
+    // Rebuilds when the language, regional format or theme changes in
+    // Settings.
     return PreferencesScope(
       preferences: preferences,
       child: ListenableBuilder(
@@ -24,6 +25,15 @@ class ServiceOrderApp extends StatelessWidget {
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           debugShowCheckedModeBanner: false,
           theme: buildTheme(dependencies.config.brandColor),
+          darkTheme: buildTheme(
+            dependencies.config.brandColor,
+            brightness: Brightness.dark,
+          ),
+          themeMode: switch (preferences.theme) {
+            ThemePreference.system => ThemeMode.system,
+            ThemePreference.light => ThemeMode.light,
+            ThemePreference.dark => ThemeMode.dark,
+          },
           locale: preferences.locale,
           supportedLocales: AppPreferences.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,

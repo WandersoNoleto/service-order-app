@@ -30,7 +30,7 @@ class BrandBottomBarAction {
   final String? semanticLabel;
 }
 
-/// Bottom navigation with a brand-colored line above the selected tab
+/// Bottom navigation that marks the selected tab with the brand color
 /// (instead of Material 3's pill indicator) and an optional raised action
 /// button between the tabs. Colors come from the theme, so each client gets
 /// its own brand color.
@@ -51,7 +51,7 @@ class BrandBottomBar extends StatelessWidget {
   static const _height = 64.0;
 
   /// How far the action button rises above the bar.
-  static const _raise = 24.0;
+  static const _raise = 22.0;
   static const _centerSlotWidth = 88.0;
 
   @override
@@ -118,7 +118,7 @@ class _CenterButton extends StatelessWidget {
 
   final BrandBottomBarAction action;
 
-  static const _size = 56.0;
+  static const _size = 48.0;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +139,7 @@ class _CenterButton extends StatelessWidget {
             DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.surface, width: 4),
+                border: Border.all(color: colors.surface, width: 3),
               ),
               child: Material(
                 color: colors.primary,
@@ -149,16 +149,16 @@ class _CenterButton extends StatelessWidget {
                   onTap: action.onPressed,
                   child: SizedBox.square(
                     dimension: _size,
-                    child: Icon(action.icon, color: colors.onPrimary, size: 28),
+                    child: Icon(action.icon, color: colors.onPrimary, size: 24),
                   ),
                 ),
               ),
             ),
             Text(
               action.label,
-              style: theme.textTheme.labelMedium?.copyWith(
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: colors.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -191,27 +191,15 @@ class _BarItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 4,
           children: [
-            // Selection indicator: brand line on the top edge.
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: 3,
-              color: selected ? theme.colorScheme.primary : Colors.transparent,
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 4,
-                children: [
-                  Icon(selected ? item.selectedIcon : item.icon, color: color),
-                  Text(
-                    item.label,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: color,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ],
+            Icon(selected ? item.selectedIcon : item.icon, color: color),
+            Text(
+              item.label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
               ),
             ),
           ],

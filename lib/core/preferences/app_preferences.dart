@@ -12,16 +12,22 @@ enum LanguagePreference { system, portuguese, english }
 /// [system] follows the phone.
 enum RegionPreference { system, brazil, unitedStates }
 
-/// Language and regional format chosen in Settings, saved in the database.
-/// Notifies listeners on change so the whole app switches immediately.
+/// Light or dark appearance. [system] follows the phone.
+enum ThemePreference { system, light, dark }
+
+/// Language, regional format and appearance chosen in Settings, saved in
+/// the database. Notifies listeners on change so the whole app switches
+/// immediately.
 class AppPreferences extends ChangeNotifier {
   AppPreferences._(
     this._settings, {
     required LanguagePreference language,
     required RegionPreference region,
+    required ThemePreference theme,
     Locale Function()? deviceLocale,
   })  : _language = language,
         _region = region,
+        _theme = theme,
         _deviceLocale =
             deviceLocale ?? (() => PlatformDispatcher.instance.locale);
 
@@ -31,13 +37,16 @@ class AppPreferences extends ChangeNotifier {
     this._settings, {
     LanguagePreference language = LanguagePreference.portuguese,
     RegionPreference region = RegionPreference.brazil,
+    ThemePreference theme = ThemePreference.system,
     Locale Function()? deviceLocale,
   })  : _language = language,
         _region = region,
+        _theme = theme,
         _deviceLocale = deviceLocale ?? (() => const Locale('pt', 'BR'));
 
   static const _languageKey = 'language';
   static const _regionKey = 'region';
+  static const _themeKey = 'theme';
 
   static const portuguese = Locale('pt', 'BR');
   static const english = Locale('en', 'US');
@@ -47,6 +56,7 @@ class AppPreferences extends ChangeNotifier {
   final Locale Function() _deviceLocale;
   LanguagePreference _language;
   RegionPreference _region;
+  ThemePreference _theme;
 
   static Future<AppPreferences> load(SettingsRepository settings) async {
     return AppPreferences._(
@@ -61,11 +71,17 @@ class AppPreferences extends ChangeNotifier {
         await settings.preference(_regionKey),
         RegionPreference.system,
       ),
+      theme: _byName(
+        ThemePreference.values,
+        await settings.preference(_themeKey),
+        ThemePreference.system,
+      ),
     );
   }
 
   LanguagePreference get language => _language;
   RegionPreference get region => _region;
+  ThemePreference get theme => _theme;
 
   /// The language actually used: Portuguese for a Portuguese phone,
   /// English otherwise.
@@ -107,6 +123,15 @@ class AppPreferences extends ChangeNotifier {
     await _settings.setPreference(
       _regionKey,
       value == RegionPreference.system ? null : value.name,
+    );
+  }
+
+  Future<void> setTheme(ThemePreference value) async {
+    _theme = value;
+    notifyListeners();
+    await _settings.setPreference(
+      _themeKey,
+      value == ThemePreference.system ? null : value.name,
     );
   }
 

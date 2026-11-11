@@ -26,7 +26,7 @@
 
 <p align="center">
   <img src="docs/screenshots/history.png" alt="History" width="200">
-  <img src="docs/screenshots/form.png" alt="New service order" width="200">
+  <img src="docs/screenshots/form.png" alt="Service order form" width="200">
   <img src="docs/screenshots/preview.png" alt="PDF preview" width="200">
   <img src="docs/screenshots/settings.png" alt="Settings" width="200">
 </p>
@@ -35,12 +35,14 @@
 
 - **Service orders**: customer, service call, parts with live totals and notes, stored on the phone
   (SQLite). No account, no server, works offline.
-- **History** grouped by day, with search by customer or number.
+- **History** grouped by day, with totals for today and the month, search by customer or number and
+  quick filters (7 days, this month).
 - **A4 PDF** following a paper template; the parts table continues on the next page when needed.
 - **Share** as PDF or image (WhatsApp), or print.
 - **Company data and logo** editable in the app; only what is filled in is printed on the header.
 - **Portuguese and English**, following the phone or chosen in the app. Regional format (currency,
   dates, times) is a separate setting, so English with Brazilian reais works, and vice versa.
+- **Light and dark themes**, following the phone or chosen in the app.
 - **In-app updates** from GitHub Releases.
 - **White-label**: each client gets its own app id, name, colors, logo, icon and splash.
 
@@ -59,7 +61,7 @@ flutter run --flavor standard --dart-define-from-file=clients/default/config.jso
 ```
 
 `standard` is the generic app: green theme, no logo and an example company that follows the app
-language. Replace it in **Settings → Company**.
+language. Replace it in **Settings**, on the company card at the top.
 
 Run the tests with:
 
@@ -118,13 +120,13 @@ channel, so the generic app and each client update independently. Release signin
 
 ```
 lib/
-├── app/            # app shell, navigation, dependency wiring
+├── app/            # app shell, navigation, theme, dependency wiring
 ├── core/           # config, database, formatting, preferences, storage
 ├── features/
 │   ├── service_order/  # form and SQLite repository
-│   ├── history/        # list grouped by day
+│   ├── history/        # list grouped by day, summary, search and filters
 │   ├── document/       # PDF layout, preview, share and print
-│   ├── settings/       # company data, logo, language and format
+│   ├── settings/       # company data, logo, language, format and theme
 │   └── update/         # GitHub Releases check and install
 └── l10n/           # Portuguese (template) and English strings
 ```

@@ -107,19 +107,19 @@ abstract class AppLocalizations {
   /// No description provided for @navHistory.
   ///
   /// In pt, this message translates to:
-  /// **'Histórico'**
+  /// **'Ordens'**
   String get navHistory;
 
   /// No description provided for @navSettings.
   ///
   /// In pt, this message translates to:
-  /// **'Configurações'**
+  /// **'Ajustes'**
   String get navSettings;
 
   /// No description provided for @navCreate.
   ///
   /// In pt, this message translates to:
-  /// **'Criar'**
+  /// **'Nova ordem'**
   String get navCreate;
 
   /// No description provided for @navCreateSemantic.
@@ -176,6 +176,30 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get edit;
 
+  /// No description provided for @automatic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automático'**
+  String get automatic;
+
+  /// No description provided for @draftNotSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rascunho não salvo'**
+  String get draftNotSaved;
+
+  /// No description provided for @orderTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Total'**
+  String get orderTotal;
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhum item} =1{1 item} other{{count} itens}}'**
+  String itemsCount(int count);
+
   /// No description provided for @delete.
   ///
   /// In pt, this message translates to:
@@ -215,8 +239,44 @@ abstract class AppLocalizations {
   /// No description provided for @historySearchHint.
   ///
   /// In pt, this message translates to:
-  /// **'Buscar por cliente ou nº da OS'**
+  /// **'Cliente, número ou serviço'**
   String get historySearchHint;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordens de serviço'**
+  String get historyTitle;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas'**
+  String get filterAll;
+
+  /// No description provided for @filterLast7Days.
+  ///
+  /// In pt, this message translates to:
+  /// **'7 dias'**
+  String get filterLast7Days;
+
+  /// No description provided for @filterThisMonth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este mês'**
+  String get filterThisMonth;
+
+  /// No description provided for @ordersCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhuma ordem} =1{1 ordem} other{{count} ordens}}'**
+  String ordersCount(int count);
+
+  /// No description provided for @orderNumberShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nº {number}'**
+  String orderNumberShort(String number);
 
   /// No description provided for @historyNoResults.
   ///
@@ -233,7 +293,7 @@ abstract class AppLocalizations {
   /// No description provided for @historyEmptyBody.
   ///
   /// In pt, this message translates to:
-  /// **'Toque em \"Criar\" para emitir a primeira ordem de serviço.'**
+  /// **'Toque em \"Nova ordem\" para emitir a primeira ordem de serviço.'**
   String get historyEmptyBody;
 
   /// No description provided for @orderNoNumber.
@@ -251,19 +311,19 @@ abstract class AppLocalizations {
   /// No description provided for @newOrderTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Nova ordem de serviço'**
+  /// **'Nova ordem'**
   String get newOrderTitle;
 
   /// No description provided for @editOrderTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Editar ordem de serviço'**
+  /// **'Editar ordem'**
   String get editOrderTitle;
 
   /// No description provided for @saveOrder.
   ///
   /// In pt, this message translates to:
-  /// **'Salvar ordem de serviço'**
+  /// **'Revisar e gerar PDF'**
   String get saveOrder;
 
   /// No description provided for @sectionOrder.
@@ -380,23 +440,35 @@ abstract class AppLocalizations {
   /// **'Descrição'**
   String get description;
 
-  /// No description provided for @sectionParts.
+  /// No description provided for @partsAndMaterials.
   ///
   /// In pt, this message translates to:
-  /// **'Peças'**
-  String get sectionParts;
+  /// **'Peças e materiais'**
+  String get partsAndMaterials;
+
+  /// No description provided for @decreaseQuantity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diminuir quantidade'**
+  String get decreaseQuantity;
+
+  /// No description provided for @increaseQuantity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aumentar quantidade'**
+  String get increaseQuantity;
+
+  /// No description provided for @totalsBreakdown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peças {parts} · Mão de obra {labor}'**
+  String totalsBreakdown(String parts, String labor);
 
   /// No description provided for @addPart.
   ///
   /// In pt, this message translates to:
   /// **'Adicionar peça'**
   String get addPart;
-
-  /// No description provided for @partNumber.
-  ///
-  /// In pt, this message translates to:
-  /// **'Peça {number}'**
-  String partNumber(int number);
 
   /// No description provided for @removePart.
   ///
@@ -416,12 +488,6 @@ abstract class AppLocalizations {
   /// **'Quant.'**
   String get quantityShort;
 
-  /// No description provided for @invalidQuantity.
-  ///
-  /// In pt, this message translates to:
-  /// **'Inválida'**
-  String get invalidQuantity;
-
   /// No description provided for @code.
   ///
   /// In pt, this message translates to:
@@ -434,28 +500,10 @@ abstract class AppLocalizations {
   /// **'Valor unit. ({symbol})'**
   String unitPriceField(String symbol);
 
-  /// No description provided for @lineTotal.
-  ///
-  /// In pt, this message translates to:
-  /// **'Total: {amount}'**
-  String lineTotal(String amount);
-
-  /// No description provided for @sectionValues.
-  ///
-  /// In pt, this message translates to:
-  /// **'Valores'**
-  String get sectionValues;
-
-  /// No description provided for @partsTotal.
-  ///
-  /// In pt, this message translates to:
-  /// **'Total peças'**
-  String get partsTotal;
-
   /// No description provided for @laborField.
   ///
   /// In pt, this message translates to:
-  /// **'Serviço ({symbol})'**
+  /// **'Mão de obra ({symbol})'**
   String laborField(String symbol);
 
   /// No description provided for @total.
@@ -464,23 +512,11 @@ abstract class AppLocalizations {
   /// **'TOTAL'**
   String get total;
 
-  /// No description provided for @sectionNotes.
-  ///
-  /// In pt, this message translates to:
-  /// **'Observações'**
-  String get sectionNotes;
-
   /// No description provided for @notes.
   ///
   /// In pt, this message translates to:
   /// **'Observações'**
   String get notes;
-
-  /// No description provided for @sectionConclusion.
-  ///
-  /// In pt, this message translates to:
-  /// **'Conclusão'**
-  String get sectionConclusion;
 
   /// No description provided for @equipmentOkQuestion.
   ///
@@ -584,53 +620,77 @@ abstract class AppLocalizations {
   /// **'Ela será removida do histórico. Esta ação não pode ser desfeita.'**
   String get deleteOrderMessage;
 
-  /// No description provided for @companyCardTitle.
-  ///
-  /// In pt, this message translates to:
-  /// **'Empresa'**
-  String get companyCardTitle;
-
   /// No description provided for @companyCardFooter.
   ///
   /// In pt, this message translates to:
-  /// **'Estes dados aparecem no cabeçalho de todas as ordens de serviço.'**
+  /// **'Estes dados aparecem no cabeçalho do PDF'**
   String get companyCardFooter;
 
-  /// No description provided for @rowName.
+  /// No description provided for @viewTemplate.
   ///
   /// In pt, this message translates to:
-  /// **'Nome'**
-  String get rowName;
+  /// **'Ver modelo'**
+  String get viewTemplate;
 
-  /// No description provided for @rowDocument.
+  /// No description provided for @settingsPreferences.
   ///
   /// In pt, this message translates to:
-  /// **'CNPJ'**
-  String get rowDocument;
+  /// **'Preferências'**
+  String get settingsPreferences;
 
-  /// No description provided for @rowPhone.
+  /// No description provided for @settingsData.
   ///
   /// In pt, this message translates to:
-  /// **'Telefone'**
-  String get rowPhone;
+  /// **'Dados'**
+  String get settingsData;
 
-  /// No description provided for @rowAddress.
+  /// No description provided for @settingsApp.
   ///
   /// In pt, this message translates to:
-  /// **'Endereço'**
-  String get rowAddress;
+  /// **'Aplicativo'**
+  String get settingsApp;
 
-  /// No description provided for @rowCity.
+  /// No description provided for @backup.
   ///
   /// In pt, this message translates to:
-  /// **'Cidade'**
-  String get rowCity;
+  /// **'Backup'**
+  String get backup;
 
-  /// No description provided for @rowResponsible.
+  /// No description provided for @backupNever.
   ///
   /// In pt, this message translates to:
-  /// **'Responsável'**
-  String get rowResponsible;
+  /// **'Último: nunca'**
+  String get backupNever;
+
+  /// No description provided for @recommended.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recomendado'**
+  String get recommended;
+
+  /// No description provided for @pdfFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pasta dos PDFs'**
+  String get pdfFolder;
+
+  /// No description provided for @updates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizações'**
+  String get updates;
+
+  /// No description provided for @checkNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar'**
+  String get checkNow;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Funcionalidade em desenvolvimento. Aguarde!'**
+  String get comingSoon;
 
   /// No description provided for @notConfigured.
   ///
@@ -650,23 +710,11 @@ abstract class AppLocalizations {
   /// **'Versão {version}'**
   String versionLabel(String version);
 
-  /// No description provided for @checkForUpdates.
-  ///
-  /// In pt, this message translates to:
-  /// **'Verificar atualizações'**
-  String get checkForUpdates;
-
   /// No description provided for @upToDate.
   ///
   /// In pt, this message translates to:
   /// **'Você já está na versão mais recente.'**
   String get upToDate;
-
-  /// No description provided for @languageAndFormat.
-  ///
-  /// In pt, this message translates to:
-  /// **'Idioma e formato'**
-  String get languageAndFormat;
 
   /// No description provided for @language.
   ///
@@ -698,12 +746,6 @@ abstract class AppLocalizations {
   /// **'Formato regional'**
   String get region;
 
-  /// No description provided for @regionHint.
-  ///
-  /// In pt, this message translates to:
-  /// **'Moeda, datas e horas'**
-  String get regionHint;
-
   /// No description provided for @regionSystem.
   ///
   /// In pt, this message translates to:
@@ -721,6 +763,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Estados Unidos'**
   String get regionUnitedStates;
+
+  /// No description provided for @theme.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tema'**
+  String get theme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automático (do celular)'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Claro'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escuro'**
+  String get themeDark;
 
   /// No description provided for @sampleCompanyName.
   ///
@@ -829,12 +895,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Padrão: {value}'**
   String defaultValue(String value);
-
-  /// No description provided for @emptyValue.
-  ///
-  /// In pt, this message translates to:
-  /// **'(vazio)'**
-  String get emptyValue;
 
   /// No description provided for @restoreDefault.
   ///

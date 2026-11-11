@@ -225,7 +225,8 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
   }) {
     final controller = _controllers[field]!;
     final defaultValue = widget.profile.defaultValue(field);
-    final changed = controller.text.trim() != defaultValue;
+    final text = controller.text.trim();
+    final changed = text != defaultValue;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -236,10 +237,10 @@ class _CompanyFormPageState extends State<CompanyFormPage> {
         validator: validator,
         decoration: InputDecoration(
           labelText: label,
-          helperText: changed
-              ? AppLocalizations.of(context).defaultValue(
-                  defaultValue.isEmpty ? AppLocalizations.of(context).emptyValue : defaultValue,
-                )
+          // The default is only a reminder for a field left empty; a filled
+          // field needs no hint (the restore button is still there).
+          helperText: text.isEmpty && changed
+              ? AppLocalizations.of(context).defaultValue(defaultValue)
               : null,
           suffixIcon: changed
               ? IconButton(

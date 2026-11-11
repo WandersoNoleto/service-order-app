@@ -45,8 +45,15 @@ class _HomeShellState extends State<HomeShell> {
     }
   }
 
-  /// "Criar" works from any tab: it jumps to the history (which reloads and
-  /// opens the new order's preview once it is saved).
+  /// The history shows the company name, which may have been edited in
+  /// Settings, so it reloads when the user comes back to it.
+  void _select(int index) {
+    if (index == 0 && _currentIndex != 0) _historyKey.currentState?.reload();
+    setState(() => _currentIndex = index);
+  }
+
+  /// "Nova ordem" works from any tab: it jumps to the history (which reloads
+  /// and opens the new order's preview once it is saved).
   void _createOrder() {
     setState(() => _currentIndex = 0);
     _historyKey.currentState?.createOrder();
@@ -66,7 +73,7 @@ class _HomeShellState extends State<HomeShell> {
       ),
       bottomNavigationBar: BrandBottomBar(
         currentIndex: _currentIndex,
-        onSelected: (index) => setState(() => _currentIndex = index),
+        onSelected: _select,
         centerAction: BrandBottomBarAction(
           icon: Icons.add,
           label: l10n.navCreate,

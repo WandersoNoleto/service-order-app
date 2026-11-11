@@ -5,6 +5,7 @@ import 'package:service_order_app/app/app.dart';
 import 'package:service_order_app/app/brand_bottom_bar.dart';
 import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
+import 'package:service_order_app/features/service_order/service_order_form_page.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
 import 'package:service_order_app/features/update/app_version.dart';
 import 'package:service_order_app/features/update/update_checker.dart';
@@ -30,9 +31,9 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    expect(find.text('History'), findsWidgets);
-    expect(find.text('Create'), findsOneWidget);
-    expect(find.text('\$1,234.56'), findsOneWidget);
+    expect(find.text('Orders'), findsWidgets);
+    expect(find.text('New order'), findsOneWidget);
+    expect(find.text('\$1,234.56'), findsWidgets);
     expect(find.textContaining('No customer'), findsOneWidget);
   });
 
@@ -42,7 +43,7 @@ void main() {
 
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
@@ -61,9 +62,9 @@ void main() {
     expect(find.text('Language'), findsOneWidget);
 
     // The PDF follows the new language too.
-    await tester.tap(find.text('History'));
+    await tester.tap(find.text('Orders'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('0007'));
+    await tester.tap(find.textContaining('0007'));
     await tester.pumpAndSettle();
     final documents = deps.documents as FakeServiceOrderDocuments;
     expect(documents.builtInLanguage.last, 'en');
@@ -74,17 +75,17 @@ void main() {
 
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Exemplo'), findsOneWidget);
-    expect(find.text('Fulano de Tal'), findsOneWidget);
+    expect(find.textContaining('Fulano de Tal'), findsOneWidget);
 
     await deps.preferences.setLanguage(LanguagePreference.english);
     await tester.pumpAndSettle();
 
     expect(find.text('Example Company'), findsOneWidget);
-    expect(find.text('John Doe'), findsOneWidget);
+    expect(find.textContaining('John Doe'), findsOneWidget);
     expect(find.text('Empresa Exemplo'), findsNothing);
   });
 
@@ -103,7 +104,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Oficina do João'), findsOneWidget);
-    expect(find.text('John Doe'), findsOneWidget);
+    expect(find.textContaining('John Doe'), findsOneWidget);
   });
 
   testWidgets('starts on history and switches to settings', (tester) async {
@@ -112,11 +113,11 @@ void main() {
 
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
 
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
 
     expect(find.text('Empresa Teste'), findsOneWidget);
-    expect(find.text('Fulano de Tal'), findsOneWidget);
+    expect(find.textContaining('Fulano de Tal'), findsOneWidget);
   });
 
   testWidgets('history is split in sections by day', (tester) async {
@@ -138,8 +139,8 @@ void main() {
     // Newest day first, its orders under it.
     final newestHeader = tester.getTopLeft(find.text('12 de maio de 2020')).dy;
     final olderHeader = tester.getTopLeft(find.text('10 de maio de 2020')).dy;
-    final order3 = tester.getTopLeft(find.text('0003')).dy;
-    final order1 = tester.getTopLeft(find.text('0001')).dy;
+    final order3 = tester.getTopLeft(find.textContaining('0003')).dy;
+    final order1 = tester.getTopLeft(find.textContaining('0001')).dy;
     expect(newestHeader < order3, isTrue);
     expect(order3 < olderHeader, isTrue);
     expect(olderHeader < order1, isTrue);
@@ -158,36 +159,59 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    final header = find.text('12 de maio de 2020');
-    final headerBefore = tester.getTopLeft(header).dy;
-    final itemBefore = tester.getTopLeft(find.text('0016')).dy;
-
-    // Scroll inside the 12 May group: the orders move, its header doesn't.
-    await tester.drag(find.text('0019'), const Offset(0, -200));
+    // Summary, search and filters scroll away first; then the header sticks
+    // to the top.
+    await tester.drag(find.textContaining('0019'), const Offset(0, -220));
     await tester.pumpAndSettle();
 
-    expect(tester.getTopLeft(find.text('0016')).dy, lessThan(itemBefore - 150));
+    final header = find.text('12 de maio de 2020');
+    final headerBefore = tester.getTopLeft(header).dy;
+    final itemBefore = tester.getTopLeft(find.textContaining('0016')).dy;
+
+    // Scroll inside the 12 May group: the orders move, its header doesn't.
+    await tester.drag(find.textContaining('0019'), const Offset(0, -200));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.textContaining('0016')).dy,
+      lessThan(itemBefore - 150),
+    );
     expect(header, findsOneWidget);
     expect(tester.getTopLeft(header).dy, headerBefore);
   });
 
-  testWidgets('"Criar" in the bottom bar works from the settings tab',
+  testWidgets('"Nova ordem" in the bottom bar works from the settings tab',
       (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Criar ordem de serviço'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+    expect(find.byType(ServiceOrderFormPage), findsOneWidget);
 
     // Leaving without saving lands on the history tab.
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.byType(CloseButton));
     await tester.pumpAndSettle();
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
+
+  Future<void> setCustomer(WidgetTester tester, String name) =>
+      tester.enterText(find.widgetWithText(TextFormField, 'Cliente'), name);
+
+  // The number lives in a chip on the form's top bar, edited in a dialog.
+  Future<void> setOrderNumber(WidgetTester tester, String number) async {
+    await tester.tap(find.byTooltip('Nº da ordem de serviço'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nº da ordem de serviço'),
+      number,
+    );
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('duplicated order number asks before saving', (tester) async {
     final deps = fakeDependencies();
@@ -195,14 +219,11 @@ void main() {
 
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Criar'));
+    await tester.tap(find.text('Nova ordem'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Nº da ordem de serviço'),
-      '0007',
-    );
-    await tester.tap(find.text('Salvar ordem de serviço'));
+    await setOrderNumber(tester, '0007');
+    await tester.tap(find.text('Revisar e gerar PDF'));
     await tester.pumpAndSettle();
 
     expect(find.text('Número já usado'), findsOneWidget);
@@ -211,23 +232,23 @@ void main() {
     // Cancel keeps the form open.
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
-    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+    expect(find.byType(ServiceOrderFormPage), findsOneWidget);
 
     // Saving anyway is allowed.
-    await tester.tap(find.text('Salvar ordem de serviço'));
+    await tester.tap(find.text('Revisar e gerar PDF'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Salvar mesmo assim'));
     await tester.pumpAndSettle();
-    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect(find.byType(ServiceOrderFormPage), findsNothing);
     expect((await deps.orders.list(query: '0007')), hasLength(2));
   });
 
   testWidgets('company form asks before discarding changes', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
 
     // No changes: back leaves right away.
@@ -235,7 +256,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Dados da empresa'), findsNothing);
 
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nome da empresa'),
@@ -252,14 +273,14 @@ void main() {
     expect(find.text('Empresa Teste'), findsOneWidget);
   });
 
-  testWidgets('"Criar" opens the form without the bottom bar', (tester) async {
+  testWidgets('"Nova ordem" opens the form without the bottom bar', (tester) async {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Criar'));
+    await tester.tap(find.text('Nova ordem'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Nova ordem de serviço'), findsOneWidget);
+    expect(find.byType(ServiceOrderFormPage), findsOneWidget);
     expect(find.byType(BrandBottomBar), findsNothing);
   });
 
@@ -268,26 +289,23 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Criar'));
+    await tester.tap(find.text('Nova ordem'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextFormField, 'Nº da ordem de serviço'), '0001');
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Cliente'),
-      'Clínica Sorriso',
-    );
-    await tester.tap(find.text('Salvar ordem de serviço'));
+    await setOrderNumber(tester, '0001');
+    await setCustomer(tester, 'Clínica Sorriso');
+    await tester.tap(find.text('Revisar e gerar PDF'));
     await tester.pumpAndSettle();
 
     // Preview of the new order.
-    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect(find.byType(ServiceOrderFormPage), findsNothing);
     expect(find.text('Enviar PDF'), findsOneWidget);
     expect(find.text('Ordem de serviço 0001'), findsOneWidget);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
-    expect(find.text('0001'), findsOneWidget);
+    expect(find.textContaining('0001'), findsOneWidget);
     expect(find.textContaining('Clínica Sorriso'), findsOneWidget);
   });
 
@@ -299,7 +317,7 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('0007'));
+    await tester.tap(find.textContaining('0007'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Enviar PDF'));
@@ -321,7 +339,7 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('0007'));
+    await tester.tap(find.textContaining('0007'));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -337,27 +355,27 @@ void main() {
     await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Criar'));
+    await tester.tap(find.text('Nova ordem'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Cliente'), 'X');
+    await setCustomer(tester, 'X');
     // Rebuild so PopScope sees canPop = false before tapping back.
     await tester.pump();
 
     // pageBack() looks for the English "Back" tooltip; the app is pt-BR.
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.byType(CloseButton));
     await tester.pumpAndSettle();
     expect(find.text('Descartar alterações?'), findsOneWidget);
 
     await tester.tap(find.text('Descartar'));
     await tester.pumpAndSettle();
-    expect(find.text('Nova ordem de serviço'), findsNothing);
+    expect(find.byType(ServiceOrderFormPage), findsNothing);
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
   Future<void> openCompanyForm(WidgetTester tester) async {
-    await tester.tap(find.text('Configurações'));
+    await tester.tap(find.text('Ajustes'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Editar'));
+    await tester.tap(find.byTooltip('Editar'));
     await tester.pumpAndSettle();
   }
 
@@ -382,14 +400,22 @@ void main() {
     );
     await tester.enterText(responsible, 'Fulano Souza');
     await tester.pump();
+    // A filled field shows no default hint, only the restore button.
+    expect(find.textContaining('Padrão:'), findsNothing);
+    expect(find.byTooltip('Restaurar padrão'), findsWidgets);
+
+    await tester.enterText(responsible, '');
+    await tester.pump();
     expect(find.text('Padrão: Fulano de Tal'), findsOneWidget);
+    await tester.enterText(responsible, 'Fulano Souza');
+    await tester.pump();
 
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dados da empresa'), findsNothing);
-    expect(find.text('(99) 91234-5678'), findsOneWidget);
-    expect(find.text('Fulano Souza'), findsOneWidget);
+    expect(find.textContaining('(99) 91234-5678'), findsOneWidget);
+    expect(find.textContaining('Fulano Souza'), findsOneWidget);
   });
 
   testWidgets('company name is required', (tester) async {
@@ -470,7 +496,7 @@ void main() {
 
     await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('0007'));
+    await tester.tap(find.textContaining('0007'));
     await tester.pumpAndSettle();
 
     final documents = deps.documents as FakeServiceOrderDocuments;
@@ -544,7 +570,7 @@ void main() {
       await tester.pumpWidget(ServiceOrderApp(dependencies: fakeDependencies()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Configurações'));
+      await tester.tap(find.text('Ajustes'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Versão 1.0.0'),
@@ -553,7 +579,10 @@ void main() {
             .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
             .first,
       );
-      await tester.tap(find.text('Verificar atualizações'));
+      // Built below the fold: bring the button into view before tapping.
+      await tester.ensureVisible(find.text('Verificar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Verificar'));
       await tester.pumpAndSettle();
 
       expect(find.text('Você já está na versão mais recente.'), findsOneWidget);

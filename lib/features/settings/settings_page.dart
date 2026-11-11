@@ -1,6 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../app/brand_widgets.dart';
+import '../../app/coming_soon.dart';
 import '../../core/formatting/region_format.dart';
 import '../../core/preferences/app_preferences.dart';
 import '../../l10n/app_localizations.dart';
@@ -55,14 +59,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final profile = _profile;
+    // Same rule as the history: on wide screens the content stays in a
+    // readable column instead of stretching.
+    final gutter =
+        math.max(12.0, (MediaQuery.sizeOf(context).width - 720) / 2);
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).navSettings)),
+      appBar: AppBar(title: Text(l10n.navSettings)),
       body: profile == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(gutter, 4, gutter, 24),
               children: [
                 if (!_deps.config.isConfigured) const _NotConfiguredWarning(),
                 _CompanyCard(
@@ -70,143 +79,43 @@ class _SettingsPageState extends State<SettingsPage> {
                   dependencies: _deps,
                   onEdit: _edit,
                 ),
-                const _LanguageAndFormatCard(),
-                _AboutCard(dependencies: _deps),
-              ],
-            ),
-    );
-  }
-}
-
-/// Summary of the company data used on every service order.
-class _CompanyCard extends StatelessWidget {
-  const _CompanyCard({
-    required this.profile,
-    required this.dependencies,
-    required this.onEdit,
-  });
-
-  final CompanyProfile profile;
-  final AppDependencies dependencies;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final cityState = [profile.companyCity, profile.companyState]
-        .where((part) => part.isNotEmpty)
-        .join(' - ');
-
-    final rows = [
-      (l10n.rowName, profile.companyName),
-      (l10n.rowDocument, profile.companyDocument),
-      (l10n.rowPhone, profile.companyPhone),
-      (l10n.rowAddress, profile.companyAddress),
-      (l10n.rowCity, cityState),
-      (l10n.rowResponsible, profile.responsibleName),
-    ];
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.companyCardTitle,
-                    style: theme.textTheme.titleLarge,
-                  ),
+                _Group(
+                  title: l10n.settingsPreferences,
+                  children: _preferenceTiles(context),
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  label: Text(l10n.edit),
+                _Group(
+                  title: l10n.settingsData,
+                  children: [
+                    _Row(
+                      icon: Icons.cloud_upload_outlined,
+                      title: l10n.backup,
+                      subtitle: l10n.backupNever,
+                      trailing: StatusTag(l10n.recommended),
+                      onTap: () => showComingSoon(context),
+                    ),
+                    _Row(
+                      icon: Icons.folder_outlined,
+                      title: l10n.pdfFolder,
+                      onTap: () => showComingSoon(context),
+                    ),
+                  ],
+                ),
+                _Group(
+                  title: l10n.settingsApp,
+                  children: [_UpdateTile(dependencies: _deps)],
                 ),
               ],
             ),
-            // Takes no space when there is no logo.
-            CompanyLogo(
-              logos: dependencies.logos,
-              customLogoFile: profile.customLogoFile,
-              fallbackAsset: profile.defaultLogoAsset,
-              height: 110,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.only(top: 20),
-            ),
-            const SizedBox(height: 12),
-            for (final (index, (label, value)) in rows.indexed) ...[
-              if (index > 0) const Divider(height: 1),
-              _InfoRow(label: label, value: value),
-            ],
-            const SizedBox(height: 16),
-            Text(
-              l10n.companyCardFooter,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
-}
-
-/// "Label ........ value" line of the company card. Long values (address)
-/// wrap on the right side; empty values show a dash.
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value.isEmpty ? '—' : value,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Language and regional format, chosen independently (e.g. English with
-/// Brazilian formats). Both default to the phone settings.
-class _LanguageAndFormatCard extends StatelessWidget {
-  const _LanguageAndFormatCard();
 
   /// Sample of a regional format: "R$ 1.234,56 · 25/10/2026".
   static String _sample(RegionFormat format) =>
       '${format.money(123456)} · ${format.date(DateTime(2026, 10, 25))}';
 
-  @override
-  Widget build(BuildContext context) {
+  /// Language, regional format and theme, chosen independently (e.g.
+  /// English with Brazilian formats). All default to the phone settings.
+  List<Widget> _preferenceTiles(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final preferences = PreferencesScope.of(context);
 
@@ -222,55 +131,66 @@ class _LanguageAndFormatCard extends StatelessWidget {
       RegionPreference.unitedStates:
           '${l10n.regionUnitedStates} (${_sample(RegionFormat.unitedStates)})',
     };
+    final themes = {
+      ThemePreference.system: l10n.themeSystem,
+      ThemePreference.light: l10n.themeLight,
+      ThemePreference.dark: l10n.themeDark,
+    };
 
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-            child: Text(
-              l10n.languageAndFormat,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.translate),
-            title: Text(l10n.language),
-            subtitle: Text(languages[preferences.language]!),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final choice = await _choose(
-                context,
-                title: l10n.language,
-                options: languages,
-                current: preferences.language,
-              );
-              if (choice != null) await preferences.setLanguage(choice);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.payments_outlined),
-            title: Text(l10n.region),
-            subtitle: Text(
-              '${regions[preferences.region]!}\n${l10n.regionHint}',
-            ),
-            isThreeLine: true,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final choice = await _choose(
-                context,
-                title: l10n.region,
-                options: regions,
-                current: preferences.region,
-              );
-              if (choice != null) await preferences.setRegion(choice);
-            },
-          ),
-          const SizedBox(height: 8),
-        ],
+    return [
+      _Row(
+        icon: Icons.translate,
+        title: l10n.language,
+        value: preferences.language == LanguagePreference.system
+            ? l10n.automatic
+            : languages[preferences.language],
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.language,
+            options: languages,
+            current: preferences.language,
+          );
+          if (choice != null) await preferences.setLanguage(choice);
+        },
       ),
-    );
+      _Row(
+        icon: Icons.payments_outlined,
+        title: l10n.region,
+        // Always shows what the format looks like, even on "automatic".
+        subtitle: _sample(preferences.format),
+        value: switch (preferences.region) {
+          RegionPreference.system => l10n.automatic,
+          RegionPreference.brazil => l10n.regionBrazil,
+          RegionPreference.unitedStates => l10n.regionUnitedStates,
+        },
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.region,
+            options: regions,
+            current: preferences.region,
+          );
+          if (choice != null) await preferences.setRegion(choice);
+        },
+      ),
+      _Row(
+        icon: Icons.brightness_6_outlined,
+        title: l10n.theme,
+        value: preferences.theme == ThemePreference.system
+            ? l10n.automatic
+            : themes[preferences.theme],
+        onTap: () async {
+          final choice = await _choose(
+            context,
+            title: l10n.theme,
+            options: themes,
+            current: preferences.theme,
+          );
+          if (choice != null) await preferences.setTheme(choice);
+        },
+      ),
+    ];
   }
 
   /// Single-choice dialog; null when dismissed.
@@ -305,17 +225,241 @@ class _LanguageAndFormatCard extends StatelessWidget {
   }
 }
 
+/// Company profile: logo, name and the main data in two short lines. Tap
+/// to edit. The strip below tells where the data is used.
+class _CompanyCard extends StatelessWidget {
+  const _CompanyCard({
+    required this.profile,
+    required this.dependencies,
+    required this.onEdit,
+  });
+
+  final CompanyProfile profile;
+  final AppDependencies dependencies;
+  final VoidCallback onEdit;
+
+  static String _join(List<String> parts) =>
+      parts.where((part) => part.isNotEmpty).join(' · ');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: colors.onSurfaceVariant,
+    );
+
+    final cityState = [profile.companyCity, profile.companyState]
+        .where((part) => part.isNotEmpty)
+        .join(' - ');
+    final lines = [
+      _join([profile.companyDocument, profile.companyPhone]),
+      _join([cityState, profile.responsibleName]),
+    ].where((line) => line.isNotEmpty);
+
+    final hasLogo =
+        profile.hasCustomLogo || profile.defaultLogoAsset.isNotEmpty;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            onTap: onEdit,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 0, 10),
+              child: Row(
+                children: [
+                  if (hasLogo)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 80),
+                      child: CompanyLogo(
+                        logos: dependencies.logos,
+                        customLogoFile: profile.customLogoFile,
+                        fallbackAsset: profile.defaultLogoAsset,
+                        height: 46,
+                        alignment: Alignment.center,
+                      ),
+                    )
+                  else
+                    const TintedIcon(Icons.storefront_outlined, size: 46),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile.companyName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: 15,
+                          ),
+                        ),
+                        for (final line in lines)
+                          Text(
+                            line,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: muted,
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: onEdit,
+                    tooltip: l10n.edit,
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          ColoredBox(
+            color: brandTint(context, 0.12),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    size: 18,
+                    color: colors.onSurface,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(l10n.companyCardFooter, style: muted)),
+                  TextButton(
+                    onPressed: () => showComingSoon(context),
+                    child: Text(
+                      l10n.viewTemplate,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Titled group of rows inside one card.
+class _Group extends StatelessWidget {
+  const _Group({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(6, 14, 6, 6),
+          child: Text(
+            title,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final (index, child) in children.indexed) ...[
+                if (index > 0) const Divider(height: 1),
+                child,
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One settings row: tinted icon, title (and a short second line), then
+/// the current value and a chevron, or a custom [trailing].
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.value,
+    this.trailing,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+  final String? subtitle;
+  final String? value;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          spacing: 10,
+          children: [
+            TintedIcon(icon),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: theme.textTheme.bodyMedium),
+                  if (subtitle case final subtitle?) Text(subtitle, style: muted),
+                ],
+              ),
+            ),
+            if (value case final value?) Text(value, style: muted),
+            trailing ??
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Installed version and the manual "check for updates".
-class _AboutCard extends StatefulWidget {
-  const _AboutCard({required this.dependencies});
+class _UpdateTile extends StatefulWidget {
+  const _UpdateTile({required this.dependencies});
 
   final AppDependencies dependencies;
 
   @override
-  State<_AboutCard> createState() => _AboutCardState();
+  State<_UpdateTile> createState() => _UpdateTileState();
 }
 
-class _AboutCardState extends State<_AboutCard> {
+class _UpdateTileState extends State<_UpdateTile> {
   late final Future<InstalledVersion> _installed =
       widget.dependencies.updates.installedVersion();
   bool _checking = false;
@@ -345,27 +489,35 @@ class _AboutCardState extends State<_AboutCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.system_update_outlined),
-        title: FutureBuilder<InstalledVersion>(
-          future: _installed,
-          builder: (_, snapshot) => Text(
-            snapshot.hasData
-                ? l10n.versionLabel(snapshot.data!.name)
-                : l10n.version,
-          ),
-        ),
-        subtitle: Text(l10n.checkForUpdates),
+    return FutureBuilder<InstalledVersion>(
+      future: _installed,
+      builder: (_, snapshot) => _Row(
+        icon: Icons.refresh,
+        title: l10n.updates,
+        subtitle: snapshot.hasData
+            ? l10n.versionLabel(snapshot.data!.name)
+            : l10n.version,
         trailing: _checking
-            ? const SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               )
-            : const Icon(Icons.chevron_right),
-        onTap: _checking ? null : _check,
+            : TextButton(
+                onPressed: _check,
+                child: Text(
+                  l10n.checkNow,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
       ),
     );
   }
