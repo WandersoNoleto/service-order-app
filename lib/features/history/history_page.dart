@@ -444,7 +444,6 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
 
     return Container(
       height: height,
@@ -456,12 +455,18 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
           Expanded(
             child: Text(
               label,
-              style: theme.textTheme.labelMedium?.copyWith(color: muted),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           Text(
             summary,
-            style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
