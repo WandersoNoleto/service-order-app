@@ -24,10 +24,11 @@ ThemeData buildTheme(
     dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
   );
 
-  final page = isDark ? generated.surface : generated.surfaceContainerLow;
-  final card = isDark ? generated.surfaceContainer : Colors.white;
-  final field =
-      isDark ? generated.surfaceContainerHigh : generated.surfaceContainerLow;
+  // Neutral grays, not tinted by the brand: the page is always a tone apart
+  // from the cards and bars on top of it, even when it has nothing to show.
+  final page = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
+  final card = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+  final field = isDark ? const Color(0xFF2A2A2A) : page;
 
   final colorScheme = generated.copyWith(
     primary: isDark ? null : brandColor,
