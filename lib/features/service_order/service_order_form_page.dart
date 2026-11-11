@@ -60,7 +60,6 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     for (final item in _initial.items) _ItemFields(item, _onChanged, _format),
   ];
 
-
   final _customerFocus = FocusNode();
 
   final _removedItems = <_ItemFields>[];
@@ -68,10 +67,6 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   /// One order per customer already served, newest first: suggestions for
   /// the customer field (there is no separate customer list).
   List<ServiceOrder> _knownCustomers = const [];
-
-  // Anchors of the step shortcuts at the top.
-  final _partsKey = GlobalKey();
-  final _reviewKey = GlobalKey();
 
   bool _dirty = false;
   bool _saving = false;
@@ -143,12 +138,12 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   void _addItem() {
     final item = _ItemFields(null, _onChanged, _format);
     _set(() => _items.add(item));
-    _editItem(item);
   }
 
   void _removeItem(_ItemFields item) {
     _set(() => _items.remove(item));
-    // Its editor may still be closing: disposed with the page.
+    // Its fields are still on screen until the next frame: disposed with
+    // the page.
     _removedItems.add(item);
   }
 
@@ -156,16 +151,6 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
       _items.fold(0, (sum, item) => sum + (item.toItem()?.totalCents ?? 0));
 
   int get _laborCents => _format.parseMoney(_labor.text) ?? 0;
-
-  void _scrollTo(GlobalKey key) {
-    final target = key.currentContext;
-    if (target == null) return;
-    Scrollable.ensureVisible(
-      target,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-    );
-  }
 
   /// The number is free text typed by the user; it lives in a chip on the
   /// top bar and is edited in a small dialog.
@@ -201,12 +186,6 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_items.any((item) => !item.isBlank && item.toItem() == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).invalidAmount)),
-      );
-      return;
-    }
     if (!await _confirmNumberIfDuplicated()) return;
     setState(() => _saving = true);
 
@@ -384,145 +363,84 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
             SizedBox(width: gutter),
           ],
         ),
-        body: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(gutter, 4, gutter, 0),
-              child: _Steps(
-                steps: [
-                  (
-                    label: l10n.sectionCustomer,
-                    done: _customerName.text.trim().isNotEmpty,
-                    onTap: _editCustomer,
-                  ),
-                  (
-                    label: l10n.stepService,
-                    done: _servicesPerformed.text.trim().isNotEmpty,
-                    onTap: _editService,
-                  ),
-                  (
-                    label: l10n.sectionParts,
-                    done: _items.any((item) => !item.isBlank),
-                    onTap: () => _scrollTo(_partsKey),
-                  ),
-                  (
-                    label: l10n.stepReview,
-                    done: false,
-                    onTap: () => _scrollTo(_reviewKey),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(gutter, 12, gutter, 24),
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(gutter, 4, gutter, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _GroupTitle(l10n.sectionCustomer),
+                _customerCard(l10n),
+                _GroupTitle(l10n.sectionServiceCall),
+                _serviceCard(l10n),
+                _GroupTitle(
+                  l10n.partsAndMaterials,
+                  trailing: l10n.itemsCount(_items.length),
+                ),
+                Card(
+                  margin: EdgeInsets.zero,
+                  clipBehavior: Clip.antiAlias,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Card(
-                        margin: EdgeInsets.zero,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          children: [
-                            _customerRow(l10n),
-                            const Divider(height: 1),
-                            _serviceRow(l10n),
-                          ],
+                      for (final item in _items) ...[
+                        _PartEditor(
+                          key: ObjectKey(item),
+                          fields: item,
+                          onRemove: () => _removeItem(item),
                         ),
-                      ),
-                      Padding(
-                        key: _partsKey,
-                        padding: const EdgeInsets.fromLTRB(2, 14, 2, 6),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                l10n.partsAndMaterials,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: colors.onSurfaceVariant,
-                                ),
+                        const Divider(height: 1),
+                      ],
+                      InkWell(
+                        onTap: _addItem,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            spacing: 10,
+                            children: [
+                              Icon(Icons.add, size: 18, color: colors.primary),
+                              Text(
+                                l10n.addPart,
+                                style: theme.textTheme.titleSmall
+                                    ?.copyWith(color: colors.primary),
                               ),
-                            ),
-                            Text(l10n.itemsCount(_items.length), style: muted),
-                          ],
-                        ),
-                      ),
-                      Card(
-                        margin: EdgeInsets.zero,
-                        clipBehavior: Clip.antiAlias,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final item in _items) ...[
-                              _PartRow(
-                                key: ObjectKey(item),
-                                fields: item,
-                                onTap: () => _editItem(item),
-                              ),
-                              const Divider(height: 1),
                             ],
-                            InkWell(
-                              onTap: _addItem,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                child: Row(
-                                  spacing: 10,
-                                  children: [
-                                    Icon(
-                                      Icons.add,
-                                      size: 18,
-                                      color: colors.primary,
-                                    ),
-                                    Text(
-                                      l10n.addPart,
-                                      style: theme.textTheme.titleSmall
-                                          ?.copyWith(color: colors.primary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        key: _reviewKey,
-                        controller: _labor,
-                        decoration: InputDecoration(
-                          labelText: l10n.laborField(_format.currencySymbol),
-                          fillColor: colors.surface,
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (text) => validateMoney(text, _format, l10n),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _notes,
-                        decoration: InputDecoration(
-                          labelText: l10n.notes,
-                          fillColor: colors.surface,
-                        ),
-                        keyboardType: TextInputType.multiline,
-                        textCapitalization: TextCapitalization.sentences,
-                        minLines: 1,
-                        maxLines: null,
-                        // Shows a "120/300" counter and stops at the PDF limit.
-                        maxLength: ServiceOrder.notesMaxLength,
                       ),
                     ],
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _labor,
+                  decoration: InputDecoration(
+                    labelText: l10n.laborField(_format.currencySymbol),
+                    fillColor: colors.surface,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  validator: (text) => validateMoney(text, _format, l10n),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _notes,
+                  decoration: InputDecoration(
+                    labelText: l10n.notes,
+                    fillColor: colors.surface,
+                  ),
+                  keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
+                  minLines: 1,
+                  maxLines: null,
+                  // Shows a "120/300" counter and stops at the PDF limit.
+                  maxLength: ServiceOrder.notesMaxLength,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
         bottomNavigationBar: _TotalBar(
           gutter: gutter,
@@ -538,123 +456,14 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     );
   }
 
-  /// Customer in one line: initials, name and address. Tap to fill or change.
-  Widget _customerRow(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final name = _customerName.text.trim();
-    final cityState = [_customerCity.text.trim(), _customerState.text.trim()]
-        .where((part) => part.isNotEmpty)
-        .join('-');
-    final address = [_customerAddress.text.trim(), cityState]
-        .where((part) => part.isNotEmpty)
-        .join(' · ');
-
-    return _SummaryRow(
-      leading: InitialsAvatar(name),
-      title: name.isEmpty ? l10n.customerNotInformed : name,
-      subtitle: address.isEmpty ? l10n.customerHint : address,
-      trailing: Text(
-        name.isEmpty ? l10n.add : l10n.change,
-        style: theme.textTheme.labelMedium?.copyWith(color: colors.primary),
-      ),
-      onTap: _editCustomer,
-    );
-  }
-
-  /// What was done and the service call details, in one line.
-  Widget _serviceRow(AppLocalizations l10n) {
-    final colors = Theme.of(context).colorScheme;
-    final service = _servicesPerformed.text.trim().split('\n').first;
-    final day = _scheduledFor ?? _calledAt ?? _installedAt;
-    final details = [
-      if (day != null)
-        [
-          _format.date(day),
-          if (_scheduledFor != null && _scheduledTime != null)
-            _format.time(_scheduledTime!),
-        ].join(', '),
-      if (_underWarranty case final warranty?)
-        warranty ? l10n.warranty : l10n.noWarranty,
-      if (_invoiceNumber.text.trim().isNotEmpty)
-        '${l10n.invoice} ${_invoiceNumber.text.trim()}',
-    ].join(' · ');
-
-    return _SummaryRow(
-      leading: SizedBox(
-        width: 34,
-        child: Icon(Icons.build_outlined, size: 18, color: colors.onSurface),
-      ),
-      title: service.isEmpty ? l10n.sectionServicesPerformed : service,
-      subtitle: details.isEmpty ? l10n.serviceCallHint : details,
-      trailing: Icon(
-        Icons.chevron_right,
-        size: 20,
-        color: colors.onSurfaceVariant,
-      ),
-      onTap: _editService,
-    );
-  }
-
-  /// Editors open over the summary, in a sheet with a title and "Done".
-  /// [fields] gets a callback to redraw the sheet after a change that is
-  /// not a text edit (dates, yes/no).
-  Future<T?> _showSheet<T>({
-    required String title,
-    required List<Widget> Function(BuildContext context, VoidCallback redraw)
-        fields,
-  }) {
-    return showModalBottomSheet<T>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            0,
-            16,
-            16 + MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 12,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(AppLocalizations.of(context).done),
-                  ),
-                ],
-              ),
-              ...fields(context, () => setSheetState(() {})),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _editCustomer() {
-    final l10n = AppLocalizations.of(context);
-
-    return _showSheet<void>(
-      title: l10n.sectionCustomer,
-      fields: (context, _) => [
+  Widget _customerCard(AppLocalizations l10n) {
+    return _FieldsCard(
+      children: [
         _customerNameField(l10n),
         _field(_customerDocument, l10n.customerDocument),
         _field(_customerAddress, l10n.address),
         Row(
-          spacing: 12,
+          spacing: 10,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 3, child: _field(_customerCity, l10n.city)),
@@ -662,7 +471,7 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
           ],
         ),
         Row(
-          spacing: 12,
+          spacing: 10,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -685,125 +494,57 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
     );
   }
 
-  Future<void> _editService() {
-    final l10n = AppLocalizations.of(context);
-
-    return _showSheet<void>(
-      title: l10n.sectionServiceCall,
-      fields: (context, redraw) {
-        void change(VoidCallback change) {
-          _set(change);
-          redraw();
-        }
-
-        return [
-          _field(
-            _servicesPerformed,
-            l10n.sectionServicesPerformed,
-            lines: 3,
-            maxLength: ServiceOrder.servicesPerformedMaxLength,
-          ),
-          _field(_invoiceNumber, l10n.invoice),
-          YesNoField(
-            label: l10n.warranty,
-            value: _underWarranty,
-            onChanged: (v) => change(() => _underWarranty = v),
-          ),
-          DateField(
-            label: l10n.calledAt,
-            value: _calledAt,
-            onChanged: (v) => change(() => _calledAt = v),
-          ),
-          Row(
-            spacing: 12,
-            children: [
-              Expanded(
-                child: DateField(
-                  label: l10n.scheduledFor,
-                  value: _scheduledFor,
-                  onChanged: (v) => change(() => _scheduledFor = v),
-                ),
-              ),
-              Expanded(
-                child: TimeField(
-                  label: l10n.scheduledTime,
-                  value: _scheduledTime,
-                  onChanged: (v) => change(() => _scheduledTime = v),
-                ),
-              ),
-            ],
-          ),
-          DateField(
-            label: l10n.installedAt,
-            value: _installedAt,
-            onChanged: (v) => change(() => _installedAt = v),
-          ),
-          YesNoField(
-            label: l10n.equipmentOkQuestion,
-            value: _equipmentOk,
-            onChanged: (v) => change(() => _equipmentOk = v),
-          ),
-        ];
-      },
-    );
-  }
-
-  /// Name, code and unit price of one part. The quantity is changed on the
-  /// row itself.
-  Future<void> _editItem(_ItemFields item) async {
-    final l10n = AppLocalizations.of(context);
-
-    final remove = await _showSheet<bool>(
-      title: l10n.part,
-      fields: (context, _) => [
-        TextFormField(
-          controller: item.description,
-          autofocus: item.isBlank,
-          decoration: InputDecoration(labelText: l10n.partName),
-          textCapitalization: TextCapitalization.sentences,
+  Widget _serviceCard(AppLocalizations l10n) {
+    return _FieldsCard(
+      children: [
+        _field(
+          _servicesPerformed,
+          l10n.sectionServicesPerformed,
+          lines: 3,
+          maxLength: ServiceOrder.servicesPerformedMaxLength,
+        ),
+        _field(_invoiceNumber, l10n.invoice),
+        YesNoField(
+          label: l10n.warranty,
+          value: _underWarranty,
+          onChanged: (v) => _set(() => _underWarranty = v),
+        ),
+        DateField(
+          label: l10n.calledAt,
+          value: _calledAt,
+          onChanged: (v) => _set(() => _calledAt = v),
         ),
         Row(
-          spacing: 12,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 10,
           children: [
             Expanded(
-              child: TextFormField(
-                controller: item.code,
-                decoration: InputDecoration(labelText: l10n.code),
+              child: DateField(
+                label: l10n.scheduledFor,
+                value: _scheduledFor,
+                onChanged: (v) => _set(() => _scheduledFor = v),
               ),
             ),
             Expanded(
-              child: TextFormField(
-                controller: item.unitPrice,
-                decoration: InputDecoration(
-                  labelText: l10n.unitPriceField(_format.currencySymbol),
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                validator: (text) => validateMoney(text, _format, l10n),
+              child: TimeField(
+                label: l10n.scheduledTime,
+                value: _scheduledTime,
+                onChanged: (v) => _set(() => _scheduledTime = v),
               ),
             ),
           ],
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(l10n.removePart),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-          ),
+        DateField(
+          label: l10n.installedAt,
+          value: _installedAt,
+          onChanged: (v) => _set(() => _installedAt = v),
+        ),
+        YesNoField(
+          label: l10n.equipmentOkQuestion,
+          value: _equipmentOk,
+          onChanged: (v) => _set(() => _equipmentOk = v),
         ),
       ],
     );
-
-    // A part added and left empty is not kept.
-    if (!mounted) return;
-    if ((remove ?? false) || item.isBlank) _removeItem(item);
   }
 
   /// Name field that suggests customers from previous orders.
@@ -881,121 +622,72 @@ class _ServiceOrderFormPageState extends State<ServiceOrderFormPage> {
   }
 }
 
-/// Progress of the order: a bar and a label per part, filled when done.
-/// Tapping one opens or scrolls to it; nothing is locked in sequence.
-class _Steps extends StatelessWidget {
-  const _Steps({required this.steps});
+/// Title above a card, with an optional note on the right.
+class _GroupTitle extends StatelessWidget {
+  const _GroupTitle(this.title, {this.trailing});
 
-  final List<({String label, bool done, VoidCallback onTap})> steps;
+  final String title;
+  final String? trailing;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final muted = theme.colorScheme.onSurfaceVariant;
 
-    return Row(
-      spacing: 4,
-      children: [
-        for (final step in steps)
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(2, 14, 2, 6),
+      child: Row(
+        children: [
           Expanded(
-            child: InkWell(
-              onTap: step.onTap,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ColoredBox(
-                    color: step.done ? colors.primary : colors.outlineVariant,
-                    child: const SizedBox(height: 3),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Text(
-                      step.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: step.done
-                            ? colors.onSurface
-                            : colors.onSurfaceVariant,
-                        fontWeight:
-                            step.done ? FontWeight.w500 : FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: Text(
+              title,
+              style: theme.textTheme.labelMedium?.copyWith(color: muted),
             ),
           ),
-      ],
+          if (trailing case final trailing?)
+            Text(
+              trailing,
+              style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            ),
+        ],
+      ),
     );
   }
 }
 
-/// Row of a summary card: leading, two lines of text and a trailing action.
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.leading,
-    required this.title,
-    required this.subtitle,
-    required this.trailing,
-    required this.onTap,
-  });
+/// Card holding a column of fields.
+class _FieldsCard extends StatelessWidget {
+  const _FieldsCard({required this.children});
 
-  final Widget leading;
-  final String title;
-  final String subtitle;
-  final Widget trailing;
-  final VoidCallback onTap;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: onTap,
+    return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 10,
-          children: [
-            leading,
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            trailing,
-          ],
+          children: children,
         ),
       ),
     );
   }
 }
 
-/// One part in the list: name, "code · unit price", quantity stepper and
-/// the line total. Tap to edit the part.
-class _PartRow extends StatelessWidget {
-  const _PartRow({super.key, required this.fields, required this.onTap});
+/// One part in the list: name, code and unit price, then the quantity
+/// stepper, the line total and the remove button.
+class _PartEditor extends StatelessWidget {
+  const _PartEditor({
+    super.key,
+    required this.fields,
+    required this.onRemove,
+  });
 
   final _ItemFields fields;
-  final VoidCallback onTap;
+  final VoidCallback onRemove;
 
   void _setQuantity(int quantity) => fields.quantity.text = '$quantity';
 
@@ -1004,17 +696,8 @@ class _PartRow extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final muted = theme.textTheme.bodySmall?.copyWith(
-      color: colors.onSurfaceVariant,
-    );
     final quantity = fields.quantityValue;
     final item = fields.toItem();
-    final name = fields.description.text.trim();
-    final details = [
-      if (fields.code.text.trim().isNotEmpty) fields.code.text.trim(),
-      if (item != null)
-        l10n.unitPriceEach(fields.format.money(item.unitPriceCents)),
-    ].join(' · ');
 
     Widget step(IconData icon, String tooltip, VoidCallback? onPressed) =>
         IconButton(
@@ -1026,75 +709,97 @@ class _PartRow extends StatelessWidget {
           onPressed: onPressed,
         );
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-        child: Row(
-          spacing: 10,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name.isEmpty ? l10n.partName : name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  if (details.isNotEmpty)
-                    Text(
-                      details,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: muted,
-                    ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 4, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextFormField(
+              controller: fields.description,
+              decoration: InputDecoration(labelText: l10n.partName),
+              textCapitalization: TextCapitalization.sentences,
             ),
-            DecoratedBox(
-              decoration: ShapeDecoration(
-                shape: StadiumBorder(
-                  side: BorderSide(color: colors.outline, width: 0.5),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
+              spacing: 10,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: fields.code,
+                    decoration: InputDecoration(labelText: l10n.code),
+                  ),
+                ),
+                Expanded(
+                  child: TextFormField(
+                    controller: fields.unitPrice,
+                    decoration: InputDecoration(
+                      labelText:
+                          l10n.unitPriceField(fields.format.currencySymbol),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (text) =>
+                        validateMoney(text, fields.format, l10n),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              DecoratedBox(
+                decoration: ShapeDecoration(
+                  shape: StadiumBorder(
+                    side: BorderSide(color: colors.outline, width: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    step(
+                      Icons.remove,
+                      l10n.decreaseQuantity,
+                      quantity > 1 ? () => _setQuantity(quantity - 1) : null,
+                    ),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 18),
+                      child: Text(
+                        '$quantity',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                    step(
+                      Icons.add,
+                      l10n.increaseQuantity,
+                      () => _setQuantity(quantity + 1),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  step(
-                    Icons.remove,
-                    l10n.decreaseQuantity,
-                    quantity > 1 ? () => _setQuantity(quantity - 1) : null,
-                  ),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 18),
-                    child: Text(
-                      '$quantity',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                  step(
-                    Icons.add,
-                    l10n.increaseQuantity,
-                    () => _setQuantity(quantity + 1),
-                  ),
-                ],
-              ),
-            ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 58),
-              child: Text(
-                item == null ? '—' : fields.format.money(item.totalCents),
-                textAlign: TextAlign.right,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: item == null ? colors.error : null,
+              Expanded(
+                child: Text(
+                  item == null ? '—' : fields.format.money(item.totalCents),
+                  textAlign: TextAlign.right,
+                  style: theme.textTheme.titleSmall,
                 ),
               ),
-            ),
-          ],
-        ),
+              IconButton(
+                tooltip: l10n.removePart,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: colors.onSurfaceVariant,
+                onPressed: onRemove,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

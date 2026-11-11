@@ -52,22 +52,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get automatic => 'Automatic';
 
   @override
-  String get done => 'Done';
-
-  @override
-  String get add => 'Add';
-
-  @override
   String get draftNotSaved => 'Draft not saved';
-
-  @override
-  String get customerHint => 'Tap to add the customer';
-
-  @override
-  String get noWarranty => 'No warranty';
-
-  @override
-  String get part => 'Part';
 
   @override
   String get orderTotal => 'Total';
@@ -82,11 +67,6 @@ class AppLocalizationsEn extends AppLocalizations {
       zero: 'No items',
     );
     return '$_temp0';
-  }
-
-  @override
-  String unitPriceEach(String price) {
-    return '$price each';
   }
 
   @override
@@ -224,9 +204,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get description => 'Description';
 
   @override
-  String get sectionParts => 'Parts';
-
-  @override
   String get partsAndMaterials => 'Parts and materials';
 
   @override
@@ -234,18 +211,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get increaseQuantity => 'Increase quantity';
-
-  @override
-  String get stepService => 'Service';
-
-  @override
-  String get stepReview => 'Review';
-
-  @override
-  String get change => 'Change';
-
-  @override
-  String get serviceCallHint => 'Warranty, dates and invoice';
 
   @override
   String totalsBreakdown(String parts, String labor) {

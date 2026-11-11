@@ -198,14 +198,8 @@ void main() {
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
   });
 
-  // The customer is a summary row on the form, edited in a sheet.
-  Future<void> setCustomer(WidgetTester tester, String name) async {
-    await tester.tap(find.text('Cliente não informado'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Cliente'), name);
-    await tester.tap(find.text('Concluir'));
-    await tester.pumpAndSettle();
-  }
+  Future<void> setCustomer(WidgetTester tester, String name) =>
+      tester.enterText(find.widgetWithText(TextFormField, 'Cliente'), name);
 
   // The number lives in a chip on the form's top bar, edited in a dialog.
   Future<void> setOrderNumber(WidgetTester tester, String number) async {
