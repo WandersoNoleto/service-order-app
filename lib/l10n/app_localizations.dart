@@ -176,6 +176,66 @@ abstract class AppLocalizations {
   /// **'Editar'**
   String get edit;
 
+  /// No description provided for @automatic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automático'**
+  String get automatic;
+
+  /// No description provided for @done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluir'**
+  String get done;
+
+  /// No description provided for @add.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar'**
+  String get add;
+
+  /// No description provided for @draftNotSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rascunho não salvo'**
+  String get draftNotSaved;
+
+  /// No description provided for @customerHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque para informar o cliente'**
+  String get customerHint;
+
+  /// No description provided for @noWarranty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem garantia'**
+  String get noWarranty;
+
+  /// No description provided for @part.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peça'**
+  String get part;
+
+  /// No description provided for @orderTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Total'**
+  String get orderTotal;
+
+  /// No description provided for @itemsCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhum item} =1{1 item} other{{count} itens}}'**
+  String itemsCount(int count);
+
+  /// No description provided for @unitPriceEach.
+  ///
+  /// In pt, this message translates to:
+  /// **'{price} un.'**
+  String unitPriceEach(String price);
+
   /// No description provided for @delete.
   ///
   /// In pt, this message translates to:
@@ -287,19 +347,19 @@ abstract class AppLocalizations {
   /// No description provided for @newOrderTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Nova ordem de serviço'**
+  /// **'Nova ordem'**
   String get newOrderTitle;
 
   /// No description provided for @editOrderTitle.
   ///
   /// In pt, this message translates to:
-  /// **'Editar ordem de serviço'**
+  /// **'Editar ordem'**
   String get editOrderTitle;
 
   /// No description provided for @saveOrder.
   ///
   /// In pt, this message translates to:
-  /// **'Salvar ordem de serviço'**
+  /// **'Revisar e gerar PDF'**
   String get saveOrder;
 
   /// No description provided for @sectionOrder.
@@ -422,17 +482,59 @@ abstract class AppLocalizations {
   /// **'Peças'**
   String get sectionParts;
 
+  /// No description provided for @partsAndMaterials.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peças e materiais'**
+  String get partsAndMaterials;
+
+  /// No description provided for @decreaseQuantity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diminuir quantidade'**
+  String get decreaseQuantity;
+
+  /// No description provided for @increaseQuantity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aumentar quantidade'**
+  String get increaseQuantity;
+
+  /// No description provided for @stepService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Serviço'**
+  String get stepService;
+
+  /// No description provided for @stepReview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão'**
+  String get stepReview;
+
+  /// No description provided for @change.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar'**
+  String get change;
+
+  /// No description provided for @serviceCallHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Garantia, datas e nota fiscal'**
+  String get serviceCallHint;
+
+  /// No description provided for @totalsBreakdown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peças {parts} · Mão de obra {labor}'**
+  String totalsBreakdown(String parts, String labor);
+
   /// No description provided for @addPart.
   ///
   /// In pt, this message translates to:
   /// **'Adicionar peça'**
   String get addPart;
-
-  /// No description provided for @partNumber.
-  ///
-  /// In pt, this message translates to:
-  /// **'Peça {number}'**
-  String partNumber(int number);
 
   /// No description provided for @removePart.
   ///
@@ -452,12 +554,6 @@ abstract class AppLocalizations {
   /// **'Quant.'**
   String get quantityShort;
 
-  /// No description provided for @invalidQuantity.
-  ///
-  /// In pt, this message translates to:
-  /// **'Inválida'**
-  String get invalidQuantity;
-
   /// No description provided for @code.
   ///
   /// In pt, this message translates to:
@@ -470,28 +566,10 @@ abstract class AppLocalizations {
   /// **'Valor unit. ({symbol})'**
   String unitPriceField(String symbol);
 
-  /// No description provided for @lineTotal.
-  ///
-  /// In pt, this message translates to:
-  /// **'Total: {amount}'**
-  String lineTotal(String amount);
-
-  /// No description provided for @sectionValues.
-  ///
-  /// In pt, this message translates to:
-  /// **'Valores'**
-  String get sectionValues;
-
-  /// No description provided for @partsTotal.
-  ///
-  /// In pt, this message translates to:
-  /// **'Total peças'**
-  String get partsTotal;
-
   /// No description provided for @laborField.
   ///
   /// In pt, this message translates to:
-  /// **'Serviço ({symbol})'**
+  /// **'Mão de obra ({symbol})'**
   String laborField(String symbol);
 
   /// No description provided for @total.
@@ -500,23 +578,11 @@ abstract class AppLocalizations {
   /// **'TOTAL'**
   String get total;
 
-  /// No description provided for @sectionNotes.
-  ///
-  /// In pt, this message translates to:
-  /// **'Observações'**
-  String get sectionNotes;
-
   /// No description provided for @notes.
   ///
   /// In pt, this message translates to:
   /// **'Observações'**
   String get notes;
-
-  /// No description provided for @sectionConclusion.
-  ///
-  /// In pt, this message translates to:
-  /// **'Conclusão'**
-  String get sectionConclusion;
 
   /// No description provided for @equipmentOkQuestion.
   ///
@@ -673,12 +739,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Pasta dos PDFs'**
   String get pdfFolder;
-
-  /// No description provided for @pdfFolderHint.
-  ///
-  /// In pt, this message translates to:
-  /// **'Onde os arquivos gerados ficam salvos'**
-  String get pdfFolderHint;
 
   /// No description provided for @updates.
   ///

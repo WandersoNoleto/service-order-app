@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../app/brand_widgets.dart';
 import '../../core/formatting/formatters.dart';
 import '../../core/preferences/app_preferences.dart';
 import '../../l10n/app_localizations.dart';
@@ -198,11 +199,13 @@ class HistoryPageState extends State<HistoryPage> {
               label: Text(label),
               labelStyle: theme.textTheme.labelMedium?.copyWith(
                 color: _filter == filter
-                    ? colors.onSecondaryContainer
+                    ? colors.onPrimary
                     : colors.onSurfaceVariant,
               ),
               selected: _filter == filter,
               showCheckmark: false,
+              selectedColor: colors.primary,
+              backgroundColor: Colors.transparent,
               shape: const StadiumBorder(),
               side: BorderSide(color: colors.outlineVariant, width: 0.5),
               visualDensity: VisualDensity.compact,
@@ -360,7 +363,10 @@ class _Summary extends StatelessWidget {
         children: [
           Expanded(child: _SummaryCard(label: l10n.today, orders: today)),
           Expanded(
-            child: _SummaryCard(label: l10n.filterThisMonth, orders: month),
+            child: _SummaryCard(
+              label: formatMonthName(now, languageCode: l10n.localeName),
+              orders: month,
+            ),
           ),
         ],
       ),
@@ -384,24 +390,22 @@ class _SummaryCard extends StatelessWidget {
     return DecoratedBox(
       decoration: _cardDecoration(context),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Column(
-          spacing: 2,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '$label · ${AppLocalizations.of(context).ordersCount(orders.length)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: muted,
-            ),
+            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
                 context.format.money(_totalCents(orders)),
-                style: theme.textTheme.titleLarge,
+                style: theme.textTheme.titleMedium,
               ),
+            ),
+            Text(
+              AppLocalizations.of(context).ordersCount(orders.length),
+              style: muted,
             ),
           ],
         ),
@@ -449,7 +453,12 @@ class _DayHeaderDelegate extends SliverPersistentHeaderDelegate {
       color: theme.scaffoldBackgroundColor,
       child: Row(
         children: [
-          Expanded(child: Text(label, style: theme.textTheme.titleSmall)),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(color: muted),
+            ),
+          ),
           Text(
             summary,
             style: theme.textTheme.bodySmall?.copyWith(color: muted),
@@ -482,15 +491,6 @@ class _OrderTile extends StatelessWidget {
   final bool last;
   final VoidCallback onTap;
 
-  /// "Padaria Sol Nascente" -> "PS".
-  static String _initials(String name) => name
-      .trim()
-      .split(RegExp(r'\s+'))
-      .where((word) => word.isNotEmpty)
-      .take(2)
-      .map((word) => word.characters.first.toUpperCase())
-      .join();
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -504,10 +504,6 @@ class _OrderTile extends StatelessWidget {
         ? l10n.orderNoNumber
         : l10n.orderNumberShort(order.orderNumber);
     final service = order.servicesPerformed.trim().split('\n').first;
-    final initials = _initials(order.customerName);
-    // White on the brand color; black on its lighter tone in the dark theme.
-    final onAvatar =
-        theme.brightness == Brightness.dark ? Colors.black : Colors.white;
 
     // The card is painted by the sliver around the list, so the tile needs
     // its own Material for the tap highlight to show on top of it.
@@ -523,17 +519,7 @@ class _OrderTile extends StatelessWidget {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         horizontalTitleGap: 12,
-        leading: CircleAvatar(
-          radius: 18,
-          backgroundColor: colors.primary,
-          foregroundColor: onAvatar,
-          child: initials.isEmpty
-              ? Icon(Icons.person_outline, size: 20, color: onAvatar)
-              : Text(
-                  initials,
-                  style: theme.textTheme.labelMedium?.copyWith(color: onAvatar),
-                ),
-        ),
+        leading: InitialsAvatar(order.customerName),
         title: Row(
           spacing: 6,
           children: [
@@ -545,7 +531,7 @@ class _OrderTile extends StatelessWidget {
                 style: theme.textTheme.titleSmall,
               ),
             ),
-            if (order.underWarranty ?? false) _Tag(l10n.warranty),
+            if (order.underWarranty ?? false) StatusTag(l10n.warranty),
           ],
         ),
         subtitle: Text(
@@ -569,34 +555,6 @@ class _OrderTile extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Small label next to the customer ("Garantia").
-class _Tag extends StatelessWidget {
-  const _Tag(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        child: Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onTertiaryContainer,
-          ),
         ),
       ),
     );

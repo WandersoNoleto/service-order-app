@@ -49,6 +49,47 @@ class AppLocalizationsPt extends AppLocalizations {
   String get edit => 'Editar';
 
   @override
+  String get automatic => 'Automático';
+
+  @override
+  String get done => 'Concluir';
+
+  @override
+  String get add => 'Adicionar';
+
+  @override
+  String get draftNotSaved => 'Rascunho não salvo';
+
+  @override
+  String get customerHint => 'Toque para informar o cliente';
+
+  @override
+  String get noWarranty => 'Sem garantia';
+
+  @override
+  String get part => 'Peça';
+
+  @override
+  String get orderTotal => 'Total';
+
+  @override
+  String itemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count itens',
+      one: '1 item',
+      zero: 'Nenhum item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unitPriceEach(String price) {
+    return '$price un.';
+  }
+
+  @override
   String get delete => 'Excluir';
 
   @override
@@ -117,13 +158,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get customerNotInformed => 'Cliente não informado';
 
   @override
-  String get newOrderTitle => 'Nova ordem de serviço';
+  String get newOrderTitle => 'Nova ordem';
 
   @override
-  String get editOrderTitle => 'Editar ordem de serviço';
+  String get editOrderTitle => 'Editar ordem';
 
   @override
-  String get saveOrder => 'Salvar ordem de serviço';
+  String get saveOrder => 'Revisar e gerar PDF';
 
   @override
   String get sectionOrder => 'Ordem de serviço';
@@ -186,12 +227,33 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sectionParts => 'Peças';
 
   @override
-  String get addPart => 'Adicionar peça';
+  String get partsAndMaterials => 'Peças e materiais';
 
   @override
-  String partNumber(int number) {
-    return 'Peça $number';
+  String get decreaseQuantity => 'Diminuir quantidade';
+
+  @override
+  String get increaseQuantity => 'Aumentar quantidade';
+
+  @override
+  String get stepService => 'Serviço';
+
+  @override
+  String get stepReview => 'Revisão';
+
+  @override
+  String get change => 'Trocar';
+
+  @override
+  String get serviceCallHint => 'Garantia, datas e nota fiscal';
+
+  @override
+  String totalsBreakdown(String parts, String labor) {
+    return 'Peças $parts · Mão de obra $labor';
   }
+
+  @override
+  String get addPart => 'Adicionar peça';
 
   @override
   String get removePart => 'Remover peça';
@@ -203,9 +265,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get quantityShort => 'Quant.';
 
   @override
-  String get invalidQuantity => 'Inválida';
-
-  @override
   String get code => 'Código';
 
   @override
@@ -214,32 +273,15 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String lineTotal(String amount) {
-    return 'Total: $amount';
-  }
-
-  @override
-  String get sectionValues => 'Valores';
-
-  @override
-  String get partsTotal => 'Total peças';
-
-  @override
   String laborField(String symbol) {
-    return 'Serviço ($symbol)';
+    return 'Mão de obra ($symbol)';
   }
 
   @override
   String get total => 'TOTAL';
 
   @override
-  String get sectionNotes => 'Observações';
-
-  @override
   String get notes => 'Observações';
-
-  @override
-  String get sectionConclusion => 'Conclusão';
 
   @override
   String get equipmentOkQuestion =>
@@ -328,9 +370,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get pdfFolder => 'Pasta dos PDFs';
-
-  @override
-  String get pdfFolderHint => 'Onde os arquivos gerados ficam salvos';
 
   @override
   String get updates => 'Atualizações';

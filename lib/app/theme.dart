@@ -50,6 +50,11 @@ ThemeData buildTheme(
       backgroundColor: page,
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
+      titleTextStyle: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w500,
+        color: colorScheme.onSurface,
+      ),
     ),
     cardTheme: CardThemeData(
       color: card,

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../app/app_dependencies.dart';
+import '../../app/brand_widgets.dart';
 import '../../app/coming_soon.dart';
 import '../../core/formatting/region_format.dart';
 import '../../core/preferences/app_preferences.dart';
@@ -85,24 +86,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 _Group(
                   title: l10n.settingsData,
                   children: [
-                    ListTile(
-                      leading: const Icon(Icons.cloud_upload_outlined),
-                      title: Row(
-                        spacing: 8,
-                        children: [
-                          Flexible(child: Text(l10n.backup)),
-                          _Tag(l10n.recommended),
-                        ],
-                      ),
-                      subtitle: Text(l10n.backupNever),
-                      trailing: const Icon(Icons.chevron_right),
+                    _Row(
+                      icon: Icons.cloud_upload_outlined,
+                      title: l10n.backup,
+                      subtitle: l10n.backupNever,
+                      trailing: StatusTag(l10n.recommended),
                       onTap: () => showComingSoon(context),
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.folder_outlined),
-                      title: Text(l10n.pdfFolder),
-                      subtitle: Text(l10n.pdfFolderHint),
-                      trailing: const Icon(Icons.chevron_right),
+                    _Row(
+                      icon: Icons.folder_outlined,
+                      title: l10n.pdfFolder,
                       onTap: () => showComingSoon(context),
                     ),
                   ],
@@ -145,11 +138,12 @@ class _SettingsPageState extends State<SettingsPage> {
     };
 
     return [
-      ListTile(
-        leading: const Icon(Icons.translate),
-        title: Text(l10n.language),
-        subtitle: Text(languages[preferences.language]!),
-        trailing: const Icon(Icons.chevron_right),
+      _Row(
+        icon: Icons.translate,
+        title: l10n.language,
+        value: preferences.language == LanguagePreference.system
+            ? l10n.automatic
+            : languages[preferences.language],
         onTap: () async {
           final choice = await _choose(
             context,
@@ -160,16 +154,16 @@ class _SettingsPageState extends State<SettingsPage> {
           if (choice != null) await preferences.setLanguage(choice);
         },
       ),
-      ListTile(
-        leading: const Icon(Icons.payments_outlined),
-        title: Text(l10n.region),
+      _Row(
+        icon: Icons.payments_outlined,
+        title: l10n.region,
         // Always shows what the format looks like, even on "automatic".
-        subtitle: Text(
-          preferences.region == RegionPreference.system
-              ? '${l10n.regionSystem} · ${_sample(preferences.format)}'
-              : regions[preferences.region]!,
-        ),
-        trailing: const Icon(Icons.chevron_right),
+        subtitle: _sample(preferences.format),
+        value: switch (preferences.region) {
+          RegionPreference.system => l10n.automatic,
+          RegionPreference.brazil => l10n.regionBrazil,
+          RegionPreference.unitedStates => l10n.regionUnitedStates,
+        },
         onTap: () async {
           final choice = await _choose(
             context,
@@ -180,11 +174,12 @@ class _SettingsPageState extends State<SettingsPage> {
           if (choice != null) await preferences.setRegion(choice);
         },
       ),
-      ListTile(
-        leading: const Icon(Icons.brightness_6_outlined),
-        title: Text(l10n.theme),
-        subtitle: Text(themes[preferences.theme]!),
-        trailing: const Icon(Icons.chevron_right),
+      _Row(
+        icon: Icons.brightness_6_outlined,
+        title: l10n.theme,
+        value: preferences.theme == ThemePreference.system
+            ? l10n.automatic
+            : themes[preferences.theme],
         onTap: () async {
           final choice = await _choose(
             context,
@@ -263,7 +258,11 @@ class _CompanyCard extends StatelessWidget {
       _join([cityState, profile.responsibleName]),
     ].where((line) => line.isNotEmpty);
 
+    final hasLogo =
+        profile.hasCustomLogo || profile.defaultLogoAsset.isNotEmpty;
+
     return Card(
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -271,31 +270,42 @@ class _CompanyCard extends StatelessWidget {
           InkWell(
             onTap: onEdit,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 4, 14),
+              padding: const EdgeInsets.fromLTRB(12, 10, 0, 10),
               child: Row(
                 children: [
-                  // Takes no space when there is no logo.
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 88),
-                    child: CompanyLogo(
-                      logos: dependencies.logos,
-                      customLogoFile: profile.customLogoFile,
-                      fallbackAsset: profile.defaultLogoAsset,
-                      height: 52,
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.only(right: 14),
-                    ),
-                  ),
+                  if (hasLogo)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 80),
+                      child: CompanyLogo(
+                        logos: dependencies.logos,
+                        customLogoFile: profile.customLogoFile,
+                        fallbackAsset: profile.defaultLogoAsset,
+                        height: 46,
+                        alignment: Alignment.center,
+                      ),
+                    )
+                  else
+                    const TintedIcon(Icons.storefront_outlined, size: 46),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 2,
                       children: [
                         Text(
                           profile.companyName,
-                          style: theme.textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: 15,
+                          ),
                         ),
-                        for (final line in lines) Text(line, style: muted),
+                        for (final line in lines)
+                          Text(
+                            line,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: muted,
+                          ),
                       ],
                     ),
                   ),
@@ -310,21 +320,27 @@ class _CompanyCard extends StatelessWidget {
           ),
           const Divider(height: 1),
           ColoredBox(
-            color: colors.surfaceContainerLow,
+            color: brandTint(context, 0.12),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 4, 2),
+              padding: const EdgeInsets.only(left: 12),
               child: Row(
                 children: [
                   Icon(
-                    Icons.picture_as_pdf_outlined,
-                    size: 16,
-                    color: colors.onSurfaceVariant,
+                    Icons.description_outlined,
+                    size: 18,
+                    color: colors.onSurface,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Expanded(child: Text(l10n.companyCardFooter, style: muted)),
                   TextButton(
                     onPressed: () => showComingSoon(context),
-                    child: Text(l10n.viewTemplate),
+                    child: Text(
+                      l10n.viewTemplate,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -351,20 +367,21 @@ class _Group extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
+          padding: const EdgeInsets.fromLTRB(6, 14, 6, 6),
           child: Text(
             title,
-            style: theme.textTheme.labelLarge?.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
         Card(
           clipBehavior: Clip.antiAlias,
+          margin: EdgeInsets.zero,
           child: Column(
             children: [
               for (final (index, child) in children.indexed) ...[
-                if (index > 0) const Divider(height: 1, indent: 56),
+                if (index > 0) const Divider(height: 1),
                 child,
               ],
             ],
@@ -375,28 +392,57 @@ class _Group extends StatelessWidget {
   }
 }
 
-/// Small label next to a row title ("Recomendado").
-class _Tag extends StatelessWidget {
-  const _Tag(this.label);
+/// One settings row: tinted icon, title (and a short second line), then
+/// the current value and a chevron, or a custom [trailing].
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.value,
+    this.trailing,
+    this.onTap,
+  });
 
-  final String label;
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+  final String? subtitle;
+  final String? value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(6),
-      ),
+    return InkWell(
+      onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        child: Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onTertiaryContainer,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          spacing: 10,
+          children: [
+            TintedIcon(icon),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: theme.textTheme.bodyMedium),
+                  if (subtitle case final subtitle?) Text(subtitle, style: muted),
+                ],
+              ),
+            ),
+            if (value case final value?) Text(value, style: muted),
+            trailing ??
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+          ],
         ),
       ),
     );
@@ -443,28 +489,36 @@ class _UpdateTileState extends State<_UpdateTile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    return ListTile(
-      leading: const Icon(Icons.system_update_outlined),
-      title: Text(l10n.updates),
-      subtitle: FutureBuilder<InstalledVersion>(
-        future: _installed,
-        builder: (_, snapshot) => Text(
-          snapshot.hasData
-              ? l10n.versionLabel(snapshot.data!.name)
-              : l10n.version,
-        ),
-      ),
-      trailing: _checking
-          ? const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox.square(
-                dimension: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+    return FutureBuilder<InstalledVersion>(
+      future: _installed,
+      builder: (_, snapshot) => _Row(
+        icon: Icons.refresh,
+        title: l10n.updates,
+        subtitle: snapshot.hasData
+            ? l10n.versionLabel(snapshot.data!.name)
+            : l10n.version,
+        trailing: _checking
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : TextButton(
+                onPressed: _check,
+                child: Text(
+                  l10n.checkNow,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            )
-          : TextButton(onPressed: _check, child: Text(l10n.checkNow)),
+      ),
     );
   }
 }

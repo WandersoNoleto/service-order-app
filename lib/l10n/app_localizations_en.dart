@@ -49,6 +49,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
 
   @override
+  String get automatic => 'Automatic';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get draftNotSaved => 'Draft not saved';
+
+  @override
+  String get customerHint => 'Tap to add the customer';
+
+  @override
+  String get noWarranty => 'No warranty';
+
+  @override
+  String get part => 'Part';
+
+  @override
+  String get orderTotal => 'Total';
+
+  @override
+  String itemsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+      zero: 'No items',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String unitPriceEach(String price) {
+    return '$price each';
+  }
+
+  @override
   String get delete => 'Delete';
 
   @override
@@ -117,13 +158,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerNotInformed => 'No customer';
 
   @override
-  String get newOrderTitle => 'New service order';
+  String get newOrderTitle => 'New order';
 
   @override
-  String get editOrderTitle => 'Edit service order';
+  String get editOrderTitle => 'Edit order';
 
   @override
-  String get saveOrder => 'Save service order';
+  String get saveOrder => 'Review and create PDF';
 
   @override
   String get sectionOrder => 'Service order';
@@ -186,12 +227,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionParts => 'Parts';
 
   @override
-  String get addPart => 'Add part';
+  String get partsAndMaterials => 'Parts and materials';
 
   @override
-  String partNumber(int number) {
-    return 'Part $number';
+  String get decreaseQuantity => 'Decrease quantity';
+
+  @override
+  String get increaseQuantity => 'Increase quantity';
+
+  @override
+  String get stepService => 'Service';
+
+  @override
+  String get stepReview => 'Review';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get serviceCallHint => 'Warranty, dates and invoice';
+
+  @override
+  String totalsBreakdown(String parts, String labor) {
+    return 'Parts $parts · Labor $labor';
   }
+
+  @override
+  String get addPart => 'Add part';
 
   @override
   String get removePart => 'Remove part';
@@ -203,26 +265,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quantityShort => 'Qty';
 
   @override
-  String get invalidQuantity => 'Invalid';
-
-  @override
   String get code => 'Code';
 
   @override
   String unitPriceField(String symbol) {
     return 'Unit price ($symbol)';
   }
-
-  @override
-  String lineTotal(String amount) {
-    return 'Total: $amount';
-  }
-
-  @override
-  String get sectionValues => 'Amounts';
-
-  @override
-  String get partsTotal => 'Parts total';
 
   @override
   String laborField(String symbol) {
@@ -233,13 +281,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get total => 'TOTAL';
 
   @override
-  String get sectionNotes => 'Notes';
-
-  @override
   String get notes => 'Notes';
-
-  @override
-  String get sectionConclusion => 'Conclusion';
 
   @override
   String get equipmentOkQuestion =>
@@ -328,9 +370,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfFolder => 'PDF folder';
-
-  @override
-  String get pdfFolderHint => 'Where generated files are saved';
 
   @override
   String get updates => 'Updates';

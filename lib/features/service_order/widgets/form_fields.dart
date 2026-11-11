@@ -4,32 +4,6 @@ import '../../../core/formatting/region_format.dart';
 import '../../../core/preferences/app_preferences.dart';
 import '../../../l10n/app_localizations.dart';
 
-/// Titled card that groups related fields ("Cliente", "Atendimento"…).
-class FormSection extends StatelessWidget {
-  const FormSection({super.key, required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: 12,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// "☐ Sim ☐ Não" from the paper form. Tapping the selected option again
 /// clears it, so "nothing checked" (null) is possible.
 class YesNoField extends StatelessWidget {
