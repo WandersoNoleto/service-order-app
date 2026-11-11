@@ -3,15 +3,19 @@ import 'package:sqflite/sqflite.dart';
 
 /// Local SQLite database. Everything the app stores lives here.
 ///
-/// To change the schema, bump [_version] and add the migration step to
+/// To change the schema, bump [schemaVersion] and add the migration step to
 /// [_upgradeSchema]. Never edit [_createSchema] alone: phones that already
 /// have the app installed only run upgrades.
 class AppDatabase {
-  AppDatabase._(this.db);
+  AppDatabase._(this.db, this.path);
 
   final Database db;
 
-  static const _version = 1;
+  /// Where the database file is (copied as is into backups).
+  final String path;
+
+  /// Version of the schema; backups record it.
+  static const schemaVersion = 1;
   static const fileName = 'service_orders.db';
 
   /// [factory] and [path] exist so tests can use an in-memory database.
@@ -26,16 +30,20 @@ class AppDatabase {
     final db = await dbFactory.openDatabase(
       dbPath,
       options: OpenDatabaseOptions(
-        version: _version,
+        version: schemaVersion,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: _createSchema,
         onUpgrade: _upgradeSchema,
       ),
     );
-    return AppDatabase._(db);
+    return AppDatabase._(db, dbPath);
   }
 
   Future<void> close() => db.close();
+
+  /// Writes pending changes into the main file, so a copy of it is
+  /// complete. Harmless when the database is not in WAL mode.
+  Future<void> flush() => db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
 
   static Future<void> _createSchema(Database db, int version) async {
     await db.execute('''

@@ -58,6 +58,15 @@ class LogoStorage {
     }
   }
 
+  /// Every stored logo (normally just the current one), for backups.
+  Future<List<File>> storedFiles() async {
+    final files = <File>[];
+    await for (final entity in (await _directory()).list()) {
+      if (entity is File) files.add(entity);
+    }
+    return files;
+  }
+
   Future<Directory> _directory() async {
     final dir = Directory(p.join((await _baseDirectory()).path, 'branding'));
     await dir.create(recursive: true);

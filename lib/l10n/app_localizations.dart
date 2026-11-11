@@ -662,6 +662,54 @@ abstract class AppLocalizations {
   /// **'Último: nunca'**
   String get backupNever;
 
+  /// No description provided for @backupLast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último: {date}'**
+  String backupLast(String date);
+
+  /// No description provided for @backupIntro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordens, configurações e logo em um arquivo .zip. Guarde fora do app para não perder nada se ele for desinstalado.'**
+  String get backupIntro;
+
+  /// No description provided for @backupShare.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviar (Drive, WhatsApp, e-mail)'**
+  String get backupShare;
+
+  /// No description provided for @backupShareHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recomendado: fica salvo mesmo se o celular for perdido'**
+  String get backupShareHint;
+
+  /// No description provided for @backupSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar no aparelho'**
+  String get backupSave;
+
+  /// No description provided for @backupSaveHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha uma pasta, como Downloads'**
+  String get backupSaveHint;
+
+  /// No description provided for @backupDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Backup concluído.'**
+  String get backupDone;
+
+  /// No description provided for @backupError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível criar o backup:\n{error}'**
+  String backupError(String error);
+
   /// No description provided for @recommended.
   ///
   /// In pt, this message translates to:

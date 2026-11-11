@@ -8,6 +8,7 @@ import 'package:service_order_app/core/config/client_config.dart';
 import 'package:service_order_app/core/formatting/region_format.dart';
 import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/core/storage/logo_storage.dart';
+import 'package:service_order_app/features/backup/backup_service.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
@@ -56,7 +57,38 @@ AppDependencies fakeDependencies({
       language: language,
       region: region,
     ),
+    backup: FakeBackupService(),
   );
+}
+
+/// Pretends the user chose an app (or a folder) unless [nextCancelled].
+class FakeBackupService implements BackupService {
+  bool nextCancelled = false;
+  DateTime? last;
+  final targets = <String>[];
+
+  /// Time recorded by the next successful backup.
+  DateTime clock = DateTime(2026, 11, 11, 15, 30);
+
+  @override
+  Future<BackupFile> create() async =>
+      (name: BackupService.fileName(clock), bytes: Uint8List(0));
+
+  @override
+  Future<bool> share() async => _done('share');
+
+  @override
+  Future<bool> saveToDevice() async => _done('device');
+
+  @override
+  Future<DateTime?> lastBackupAt() async => last;
+
+  bool _done(String target) {
+    if (nextCancelled) return false;
+    targets.add(target);
+    last = clock;
+    return true;
+  }
 }
 
 /// Records actions instead of building PDFs or calling Android plugins.
@@ -236,6 +268,9 @@ class FakeLogoStorage implements LogoStorage {
 
   @override
   Future<void> deleteAllExcept(String? keep) async {}
+
+  @override
+  Future<List<File>> storedFiles() async => [];
 }
 
 /// Returns [nextUpdate] (null = up to date) without calling GitHub.

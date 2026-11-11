@@ -25,6 +25,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   CompanyProfile? _profile;
+  DateTime? _lastBackup;
 
   /// Language of the loaded profile: the example company is translated, so
   /// it is reloaded when the language changes.
@@ -44,8 +45,38 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _load() async {
     final profile = await _deps.settings.companyProfile(_deps.companyDefaults);
+    final lastBackup = await _deps.backup.lastBackupAt();
     if (!mounted) return;
-    setState(() => _profile = profile);
+    setState(() {
+      _profile = profile;
+      _lastBackup = lastBackup;
+    });
+  }
+
+  Future<void> _backup() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    final target = await showDialog<_BackupTarget>(
+      context: context,
+      builder: (_) => const _BackupDialog(),
+    );
+    if (target == null) return;
+
+    try {
+      final done = switch (target) {
+        _BackupTarget.share => await _deps.backup.share(),
+        _BackupTarget.device => await _deps.backup.saveToDevice(),
+      };
+      if (!done) return;
+      final lastBackup = await _deps.backup.lastBackupAt();
+      if (mounted) setState(() => _lastBackup = lastBackup);
+      messenger.showSnackBar(SnackBar(content: Text(l10n.backupDone)));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.backupError('$error'))),
+      );
+    }
   }
 
   Future<void> _edit() async {
@@ -89,9 +120,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     _Row(
                       icon: Icons.cloud_upload_outlined,
                       title: l10n.backup,
-                      subtitle: l10n.backupNever,
-                      trailing: StatusTag(l10n.recommended),
-                      onTap: () => showComingSoon(context),
+                      subtitle: switch (_lastBackup) {
+                        final at? => l10n.backupLast(context.format.date(at)),
+                        null => l10n.backupNever,
+                      },
+                      // Only nags until the first backup.
+                      trailing: _lastBackup == null
+                          ? StatusTag(l10n.recommended)
+                          : null,
+                      onTap: _backup,
                     ),
                     _Row(
                       icon: Icons.folder_outlined,
@@ -348,6 +385,61 @@ class _CompanyCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+enum _BackupTarget { share, device }
+
+/// Where to send the backup. Sharing comes first: it is the only option
+/// that also survives losing the phone.
+class _BackupDialog extends StatelessWidget {
+  const _BackupDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    Widget option(
+      _BackupTarget target,
+      IconData icon,
+      String title,
+      String hint,
+    ) =>
+        ListTile(
+          leading: TintedIcon(icon),
+          title: Text(title),
+          subtitle: Text(hint),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+          onTap: () => Navigator.of(context).pop(target),
+        );
+
+    return SimpleDialog(
+      title: Text(l10n.backup),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Text(
+            l10n.backupIntro,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        option(
+          _BackupTarget.share,
+          Icons.share_outlined,
+          l10n.backupShare,
+          l10n.backupShareHint,
+        ),
+        option(
+          _BackupTarget.device,
+          Icons.save_alt,
+          l10n.backupSave,
+          l10n.backupSaveHint,
+        ),
+      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import '../core/config/client_config.dart';
 import '../core/preferences/app_preferences.dart';
 import '../core/storage/logo_storage.dart';
+import '../features/backup/backup_service.dart';
 import '../features/document/service_order_documents.dart';
 import '../features/service_order/data/service_order_repository.dart';
 import '../features/settings/data/settings_repository.dart';
@@ -21,6 +22,7 @@ class AppDependencies {
     required this.updates,
     required this.installer,
     required this.preferences,
+    required this.backup,
     this.checkUpdatesOnStartup = true,
   });
 
@@ -37,6 +39,9 @@ class AppDependencies {
 
   /// Language and regional format (Settings).
   final AppPreferences preferences;
+
+  /// Export (and later restore) of all the app data.
+  final BackupService backup;
 
   /// Whether to look for a new version when the app opens. The manual
   /// check in Settings works either way.

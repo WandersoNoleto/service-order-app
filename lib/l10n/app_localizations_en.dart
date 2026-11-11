@@ -331,6 +331,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupNever => 'Last: never';
 
   @override
+  String backupLast(String date) {
+    return 'Last: $date';
+  }
+
+  @override
+  String get backupIntro =>
+      'Orders, settings and logo in one .zip file. Keep it outside the app so nothing is lost if the app is uninstalled.';
+
+  @override
+  String get backupShare => 'Send (Drive, WhatsApp, e-mail)';
+
+  @override
+  String get backupShareHint =>
+      'Recommended: stays safe even if the phone is lost';
+
+  @override
+  String get backupSave => 'Save on this phone';
+
+  @override
+  String get backupSaveHint => 'Pick a folder, such as Downloads';
+
+  @override
+  String get backupDone => 'Backup done.';
+
+  @override
+  String backupError(String error) {
+    return 'Couldn\'t create the backup:\n$error';
+  }
+
+  @override
   String get recommended => 'Recommended';
 
   @override

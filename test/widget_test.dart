@@ -120,6 +120,46 @@ void main() {
     expect(find.textContaining('Fulano de Tal'), findsOneWidget);
   });
 
+  testWidgets('backup is shared and shows its date', (tester) async {
+    final deps = fakeDependencies();
+    final backup = deps.backup as FakeBackupService;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Último: nunca'), findsOneWidget);
+    expect(find.text('Recomendado'), findsOneWidget);
+
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enviar (Drive, WhatsApp, e-mail)'));
+    await tester.pumpAndSettle();
+
+    expect(backup.targets, ['share']);
+    expect(find.text('Backup concluído.'), findsOneWidget);
+    expect(find.text('Último: 11/11/2026'), findsOneWidget);
+    expect(find.text('Recomendado'), findsNothing);
+  });
+
+  testWidgets('a cancelled backup changes nothing', (tester) async {
+    final deps = fakeDependencies();
+    (deps.backup as FakeBackupService).nextCancelled = true;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar no aparelho'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Backup concluído.'), findsNothing);
+    expect(find.text('Último: nunca'), findsOneWidget);
+  });
+
   testWidgets('history is split in sections by day', (tester) async {
     final deps = fakeDependencies();
     final orders = deps.orders as FakeServiceOrderRepository;

@@ -19,6 +19,7 @@ import 'package:service_order_app/core/config/client_config.dart';
 import 'package:service_order_app/core/database/app_database.dart';
 import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/core/storage/logo_storage.dart';
+import 'package:service_order_app/features/backup/backup_service.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/data/service_order_repository.dart';
@@ -269,15 +270,22 @@ Future<void> main() async {
   final settings = SettingsRepository(database);
   final preferences = await AppPreferences.load(settings);
   final logos = LogoStorage();
+  final updates = UpdateChecker(channel: config.channel);
   final dependencies = AppDependencies(
     config: config,
     orders: ServiceOrderRepository(database),
     settings: settings,
     documents: ServiceOrderDocuments(logos),
     logos: logos,
-    updates: UpdateChecker(channel: config.channel),
+    updates: updates,
     installer: UpdateInstaller(),
     preferences: preferences,
+    backup: BackupService(
+      database: database,
+      logos: logos,
+      settings: settings,
+      appVersion: updates.installedVersion,
+    ),
     // The demo has the pubspec version, so a published build would always
     // look newer. The manual check in Settings still works.
     checkUpdatesOnStartup: false,
