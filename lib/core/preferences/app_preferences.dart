@@ -21,28 +21,22 @@ enum ThemePreference { system, light, dark }
 class AppPreferences extends ChangeNotifier {
   AppPreferences._(
     this._settings, {
-    required LanguagePreference language,
-    required RegionPreference region,
-    required ThemePreference theme,
+    required this._language,
+    required this._region,
+    required this._theme,
     Locale Function()? deviceLocale,
-  })  : _language = language,
-        _region = region,
-        _theme = theme,
-        _deviceLocale =
+  }) : _deviceLocale =
             deviceLocale ?? (() => PlatformDispatcher.instance.locale);
 
   /// For tests: fixed values, nothing read from the database.
   @visibleForTesting
   AppPreferences.fixed(
     this._settings, {
-    LanguagePreference language = LanguagePreference.portuguese,
-    RegionPreference region = RegionPreference.brazil,
-    ThemePreference theme = ThemePreference.system,
+    this._language = LanguagePreference.portuguese,
+    this._region = RegionPreference.brazil,
+    this._theme = ThemePreference.system,
     Locale Function()? deviceLocale,
-  })  : _language = language,
-        _region = region,
-        _theme = theme,
-        _deviceLocale = deviceLocale ?? (() => const Locale('pt', 'BR'));
+  }) : _deviceLocale = deviceLocale ?? (() => const Locale('pt', 'BR'));
 
   static const _languageKey = 'language';
   static const _regionKey = 'region';
