@@ -58,6 +58,26 @@ class LogoStorage {
     }
   }
 
+  /// Every stored logo (normally just the current one), for backups.
+  Future<List<File>> storedFiles() async {
+    final files = <File>[];
+    await for (final entity in (await _directory()).list()) {
+      if (entity is File) files.add(entity);
+    }
+    return files;
+  }
+
+  /// Replaces every stored logo with [files] (name → content), when a
+  /// backup is restored. Names are reduced to their base name, so a
+  /// crafted backup can't write outside the folder.
+  Future<void> replaceAll(Map<String, List<int>> files) async {
+    await deleteAllExcept(null);
+    final dir = await _directory();
+    for (final MapEntry(key: name, value: content) in files.entries) {
+      await File(p.join(dir.path, p.basename(name))).writeAsBytes(content);
+    }
+  }
+
   Future<Directory> _directory() async {
     final dir = Directory(p.join((await _baseDirectory()).path, 'branding'));
     await dir.create(recursive: true);

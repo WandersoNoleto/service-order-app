@@ -16,10 +16,14 @@ class ServiceOrderPreviewPage extends StatefulWidget {
     super.key,
     required this.dependencies,
     required this.orderId,
+    this.justSaved = false,
   });
 
   final AppDependencies dependencies;
   final int orderId;
+
+  /// The order was just created: its PDF also goes to the phone's folder.
+  final bool justSaved;
 
   @override
   State<ServiceOrderPreviewPage> createState() =>
@@ -44,10 +48,11 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _load(store: widget.justSaved);
   }
 
-  Future<void> _load() async {
+  /// [store]: also save the PDF in the phone's folder (after a save).
+  Future<void> _load({bool store = false}) async {
     setState(() {
       _pages = null;
       _error = null;
@@ -67,15 +72,33 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
         format: _deps.preferences.format,
       );
       final pages = await _deps.documents.renderPages(pdf);
+      final stored = store ? await _storePdf(order, pdf) : null;
       if (!mounted) return;
       setState(() {
-        _order = order;
+        _order = stored ?? order;
         _pdf = pdf;
         _pages = pages;
       });
     } catch (error) {
       // Layout problems in the pdf package are Errors, not Exceptions.
       if (mounted) setState(() => _error = error);
+    }
+  }
+
+  /// Saves the PDF in the phone's folder and returns the order read again
+  /// (it now knows its file, which the edit form must keep). A failure is
+  /// only reported: the order itself is saved.
+  Future<ServiceOrder?> _storePdf(ServiceOrder order, Uint8List pdf) async {
+    try {
+      await _deps.pdfStore.store(order, pdf, prefix: _l10n.pdfFilePrefix);
+      return await _deps.orders.findById(widget.orderId);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_l10n.pdfFolderSaveError('$error'))),
+        );
+      }
+      return null;
     }
   }
 
@@ -103,7 +126,7 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
         ),
       ),
     );
-    if (savedId != null) await _load();
+    if (savedId != null) await _load(store: true);
   }
 
   Future<void> _delete() async {
@@ -126,6 +149,14 @@ class _ServiceOrderPreviewPageState extends State<ServiceOrderPreviewPage> {
     );
     if (!(confirmed ?? false)) return;
 
+    // The file is removed first: once the order is gone, so is its path.
+    if (_order case final order?) {
+      try {
+        await _deps.pdfStore.remove(order);
+      } catch (_) {
+        // A file left behind in the folder is harmless.
+      }
+    }
     await _deps.orders.delete(widget.orderId);
     if (mounted) Navigator.of(context).pop();
   }

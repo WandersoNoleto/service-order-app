@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher name of the generic app; follows the phone language
+     (values-pt for Portuguese). Client flavors set theirs with resValue. -->
+<resources>
+    <string name="app_name">Service Orders</string>
+</resources>

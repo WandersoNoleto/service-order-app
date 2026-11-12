@@ -32,8 +32,7 @@ class SettingsRepository {
     return CompanyProfile(
       defaults: defaults,
       overrides: {
-        for (final field in CompanyField.values)
-          if (stored[_key(field)] case final value?) field: value,
+        for (final field in CompanyField.values) field: ?stored[_key(field)],
       },
       customLogoFile: stored[_logoFileKey],
     );

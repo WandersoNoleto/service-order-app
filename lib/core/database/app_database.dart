@@ -1,17 +1,29 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 /// Local SQLite database. Everything the app stores lives here.
 ///
-/// To change the schema, bump [_version] and add the migration step to
+/// To change the schema, bump [schemaVersion] and add the migration step to
 /// [_upgradeSchema]. Never edit [_createSchema] alone: phones that already
 /// have the app installed only run upgrades.
 class AppDatabase {
-  AppDatabase._(this.db);
+  AppDatabase._(this._db, this.path, this._factory);
 
-  final Database db;
+  Database _db;
+  final DatabaseFactory _factory;
 
-  static const _version = 1;
+  /// Where the database file is (copied as is into backups).
+  final String path;
+
+  /// The open database. Read it on every use (as the repositories do):
+  /// restoring a backup swaps it for a new one.
+  Database get db => _db;
+
+  /// Version of the schema; backups record it.
+  static const schemaVersion = 1;
   static const fileName = 'service_orders.db';
 
   /// [factory] and [path] exist so tests can use an in-memory database.
@@ -22,20 +34,56 @@ class AppDatabase {
     final dbFactory = factory ?? databaseFactory;
     final dbPath =
         path ?? p.join(await dbFactory.getDatabasesPath(), fileName);
+    return AppDatabase._(await _openAt(dbFactory, dbPath), dbPath, dbFactory);
+  }
 
-    final db = await dbFactory.openDatabase(
-      dbPath,
+  static Future<Database> _openAt(DatabaseFactory factory, String path) {
+    return factory.openDatabase(
+      path,
       options: OpenDatabaseOptions(
-        version: _version,
+        version: schemaVersion,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: _createSchema,
         onUpgrade: _upgradeSchema,
       ),
     );
-    return AppDatabase._(db);
   }
 
-  Future<void> close() => db.close();
+  Future<void> close() => _db.close();
+
+  /// Replaces the whole database with [bytes] (a backup) and reopens it,
+  /// running the migrations if the backup is older. If the new file can't
+  /// be opened as this app's database, the previous one is put back and
+  /// the error rethrown.
+  Future<void> replaceFile(Uint8List bytes) async {
+    await flush();
+    await _db.close();
+    final file = File(path);
+    final previous = await file.readAsBytes();
+
+    Future<void> write(List<int> content) async {
+      for (final suffix in ['-wal', '-shm', '-journal']) {
+        final extra = File('$path$suffix');
+        if (await extra.exists()) await extra.delete();
+      }
+      await file.writeAsBytes(content, flush: true);
+    }
+
+    await write(bytes);
+    try {
+      _db = await _openAt(_factory, path);
+      await _db.rawQuery('SELECT 1 FROM service_orders LIMIT 1');
+    } catch (_) {
+      if (_db.isOpen) await _db.close();
+      await write(previous);
+      _db = await _openAt(_factory, path);
+      rethrow;
+    }
+  }
+
+  /// Writes pending changes into the main file, so a copy of it is
+  /// complete. Harmless when the database is not in WAL mode.
+  Future<void> flush() => _db.rawQuery('PRAGMA wal_checkpoint(TRUNCATE)');
 
   static Future<void> _createSchema(Database db, int version) async {
     await db.execute('''

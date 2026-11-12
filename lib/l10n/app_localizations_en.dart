@@ -331,10 +331,115 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupNever => 'Last: never';
 
   @override
+  String backupLast(String date) {
+    return 'Last: $date';
+  }
+
+  @override
+  String get backupIntro =>
+      'The backup doesn\'t hold the PDFs. It\'s a copy of the app\'s data (orders, settings and logo) in a .zip file, to bring the app back to how it is now if needed. The PDFs are generated again from that data. Keep the file outside the app.';
+
+  @override
+  String get backupShare => 'Send (Drive, WhatsApp, e-mail)';
+
+  @override
+  String get backupShareHint =>
+      'Recommended: stays safe even if the phone is lost';
+
+  @override
+  String get backupSave => 'Save on this phone';
+
+  @override
+  String get backupSaveHint => 'Pick a folder, such as Downloads';
+
+  @override
+  String get backupDone => 'Backup done.';
+
+  @override
+  String backupError(String error) {
+    return 'Couldn\'t create the backup:\n$error';
+  }
+
+  @override
+  String get backupRestore => 'Restore a backup';
+
+  @override
+  String get backupRestoreHint => 'Replaces the current data';
+
+  @override
+  String get restoreTitle => 'Restore this backup?';
+
+  @override
+  String restoreMessage(String date) {
+    return 'Backup from $date. The current orders, settings and logo will be replaced.';
+  }
+
+  @override
+  String get restoreConfirm => 'Restore';
+
+  @override
+  String get restoreDone => 'Backup restored.';
+
+  @override
+  String get restoreUndone => 'The previous data is back.';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get restoreNotABackup => 'This file is not a backup from this app.';
+
+  @override
+  String get restoreNewerVersion =>
+      'This backup was made by a newer version of the app. Update the app and try again.';
+
+  @override
+  String restoreError(String error) {
+    return 'Couldn\'t restore the backup:\n$error';
+  }
+
+  @override
   String get recommended => 'Recommended';
 
   @override
   String get pdfFolder => 'PDF folder';
+
+  @override
+  String pdfFolderIntro(String folder) {
+    return 'Each saved order gets a PDF in the phone\'s $folder folder. The files stay there even if the app is uninstalled.';
+  }
+
+  @override
+  String get pdfFolderUnsupported => 'Available on Android 10 or newer';
+
+  @override
+  String get pdfFolderOpen => 'Open folder';
+
+  @override
+  String pdfFolderOpenFailed(String folder) {
+    return 'Open the Files app and look for the $folder folder.';
+  }
+
+  @override
+  String get pdfFolderSaveAll => 'Save all PDFs again';
+
+  @override
+  String get pdfFolderSaveAllHint => 'Useful after restoring a backup';
+
+  @override
+  String pdfFolderSaving(String done, String total) {
+    return 'Saving PDFs… $done of $total';
+  }
+
+  @override
+  String pdfFolderSavedAll(String count) {
+    return 'PDFs saved in the folder: $count';
+  }
+
+  @override
+  String pdfFolderSaveError(String error) {
+    return 'The PDF wasn\'t saved in the folder:\n$error';
+  }
 
   @override
   String get updates => 'Updates';

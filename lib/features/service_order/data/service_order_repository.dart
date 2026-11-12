@@ -71,7 +71,7 @@ class ServiceOrderRepository {
       where: exceptId == null
           ? 'order_number = ?'
           : 'order_number = ? AND id != ?',
-      whereArgs: [number, if (exceptId != null) exceptId],
+      whereArgs: [number, ?exceptId],
       limit: 1,
     );
     return rows.isEmpty ? null : ServiceOrder.fromMap(rows.first);

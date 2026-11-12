@@ -21,7 +21,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the generic channel: major*1000000 + minor*10000 + patch*100.
 # tool/build_release.sh reads it and checks it; client builds add their build
 # number (1-99) on top. Bump it in its own "chore: release x.y.z" commit.
-version: 1.2.0+1020000
+version: 1.2.1+1020100
 
 environment:
   sdk: ^3.13.7
@@ -52,6 +52,8 @@ dependencies:
   package_info_plus: ^10.2.2
   ota_update: ^7.1.0
   intl: ^0.20.3
+  archive: ^4.6.0
+  file_picker: ^13.3.2
 
 dev_dependencies:
   flutter_test:

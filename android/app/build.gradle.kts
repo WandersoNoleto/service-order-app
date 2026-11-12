@@ -60,7 +60,7 @@ android {
     productFlavors {
         create("standard") {
             dimension = "client"
-            resValue("string", "app_name", "Ordens de Serviço")
+            // app_name in src/standard/res, translated (values-pt).
         }
     }
 

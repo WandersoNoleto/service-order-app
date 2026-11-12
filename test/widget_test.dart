@@ -1,9 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:service_order_app/app/app.dart';
 import 'package:service_order_app/app/brand_bottom_bar.dart';
 import 'package:service_order_app/core/preferences/app_preferences.dart';
+import 'package:service_order_app/features/backup/backup_service.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
 import 'package:service_order_app/features/service_order/service_order_form_page.dart';
 import 'package:service_order_app/features/settings/data/company_profile.dart';
@@ -118,6 +121,76 @@ void main() {
 
     expect(find.text('Empresa Teste'), findsOneWidget);
     expect(find.textContaining('Fulano de Tal'), findsOneWidget);
+  });
+
+  testWidgets('backup is shared and shows its date', (tester) async {
+    final deps = fakeDependencies();
+    final backup = deps.backup as FakeBackupService;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Último: nunca'), findsOneWidget);
+    expect(find.text('Recomendado'), findsOneWidget);
+
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enviar (Drive, WhatsApp, e-mail)'));
+    await tester.pumpAndSettle();
+
+    expect(backup.targets, ['share']);
+    expect(find.text('Backup concluído.'), findsOneWidget);
+    expect(find.text('Último: 11/11/2026'), findsOneWidget);
+    expect(find.text('Recomendado'), findsNothing);
+  });
+
+  testWidgets('a cancelled backup changes nothing', (tester) async {
+    final deps = fakeDependencies();
+    (deps.backup as FakeBackupService).nextCancelled = true;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar no aparelho'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Backup concluído.'), findsNothing);
+    expect(find.text('Último: nunca'), findsOneWidget);
+  });
+
+  testWidgets('restoring asks first and offers to undo', (tester) async {
+    final deps = fakeDependencies();
+    final backup = deps.backup as FakeBackupService;
+    backup.nextPick = BackupContents(
+      createdAt: DateTime(2026, 11, 10, 9, 5),
+      database: Uint8List(0),
+      logos: const {},
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Backup'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Restaurar um backup'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Backup de 10/11/2026'), findsOneWidget);
+    await tester.tap(find.text('Restaurar'));
+    await tester.pumpAndSettle();
+
+    expect(backup.restored, hasLength(1));
+    expect(find.text('Backup restaurado.'), findsOneWidget);
+
+    await tester.tap(find.text('Desfazer'));
+    await tester.pumpAndSettle();
+    expect(backup.undone, 1);
   });
 
   testWidgets('history is split in sections by day', (tester) async {
@@ -309,6 +382,31 @@ void main() {
     expect(find.textContaining('Clínica Sorriso'), findsOneWidget);
   });
 
+  testWidgets('a new order\'s PDF goes to the phone folder once',
+      (tester) async {
+    final deps = fakeDependencies();
+    final folder = deps.pdfFolder as FakePdfFolder;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nova ordem'));
+    await tester.pumpAndSettle();
+    await setOrderNumber(tester, '0001');
+    await setCustomer(tester, 'Clínica Sorriso');
+    await tester.tap(find.text('Revisar e gerar PDF'));
+    await tester.pumpAndSettle();
+
+    expect(folder.saved, ['OS_0001_Clinica_Sorriso.pdf']);
+    expect((await deps.orders.findById(1))!.pdfPath, 'content://pdf/1');
+
+    // Just looking at it again doesn't save another copy.
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('0001'));
+    await tester.pumpAndSettle();
+    expect(folder.saved, hasLength(1));
+  });
+
   testWidgets('preview actions share and print the order', (tester) async {
     final deps = fakeDependencies();
     await deps.orders.create(_order);
@@ -349,6 +447,59 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nenhuma ordem de serviço emitida ainda'), findsOneWidget);
+  });
+
+  testWidgets('deleting an order also deletes its PDF file', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(
+      const ServiceOrder(orderNumber: '0007', pdfPath: 'content://pdf/7'),
+    );
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('0007'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Excluir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
+    await tester.pumpAndSettle();
+
+    expect((deps.pdfFolder as FakePdfFolder).deleted, ['content://pdf/7']);
+  });
+
+  testWidgets('settings saves every PDF again', (tester) async {
+    final deps = fakeDependencies();
+    await deps.orders.create(const ServiceOrder(orderNumber: '0001'));
+    await deps.orders.create(const ServiceOrder(orderNumber: '0002'));
+    final folder = deps.pdfFolder as FakePdfFolder;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Documents/Teste'), findsOneWidget);
+    await tester.tap(find.text('Pasta dos PDFs'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar todos os PDFs de novo'));
+    await tester.pumpAndSettle();
+
+    expect(folder.saved, hasLength(2));
+    expect(find.text('PDFs salvos na pasta: 2'), findsOneWidget);
+  });
+
+  testWidgets('PDF folder explains when the phone is too old', (tester) async {
+    final deps = fakeDependencies();
+    (deps.pdfFolder as FakePdfFolder).supported = false;
+
+    await tester.pumpWidget(ServiceOrderApp(dependencies: deps));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ajustes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Disponível no Android 10 ou mais novo'), findsOneWidget);
   });
 
   testWidgets('leaving an edited form asks before discarding', (tester) async {

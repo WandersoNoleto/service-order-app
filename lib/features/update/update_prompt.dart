@@ -138,15 +138,19 @@ class _DownloadDialogState extends State<_DownloadDialog> {
           case InstallerOpened():
             _close(null);
           case InstallFailed():
+            if (!mounted) return;
             _close(installFailureMessage(AppLocalizations.of(context), event));
         }
       },
-      onError: (Object error) => _close(
-        installFailureMessage(
-          AppLocalizations.of(context),
-          InstallFailed(InstallFailure.other, detail: '$error'),
-        ),
-      ),
+      onError: (Object error) {
+        if (!mounted) return;
+        _close(
+          installFailureMessage(
+            AppLocalizations.of(context),
+            InstallFailed(InstallFailure.other, detail: '$error'),
+          ),
+        );
+      },
     );
   }
 
