@@ -14,7 +14,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * Saves PDFs in Documents/<app name>, a folder the user sees in the Files
+ * Saves PDFs in Documents/ServiceOrders, a folder the user sees in the Files
  * app and that stays when the app is uninstalled.
  *
  * Uses MediaStore, which needs no permission, so it only works on
@@ -28,14 +28,8 @@ class PdfFolderChannel(private val activity: Activity) : MethodChannel.MethodCal
 
     private val resolver get() = activity.contentResolver
 
-    /** "Documents/Ordens de Serviço" (no slashes from the app name). */
-    private val relativePath: String
-        get() {
-            val label = activity.applicationInfo.loadLabel(activity.packageManager)
-                .toString()
-                .replace('/', '-')
-            return "${Environment.DIRECTORY_DOCUMENTS}/$label"
-        }
+    /** Same English name for every client and app language. */
+    private val relativePath = "${Environment.DIRECTORY_DOCUMENTS}/ServiceOrders"
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {

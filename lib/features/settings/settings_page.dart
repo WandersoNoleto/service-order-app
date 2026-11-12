@@ -28,7 +28,7 @@ class _SettingsPageState extends State<SettingsPage> {
   CompanyProfile? _profile;
   DateTime? _lastBackup;
 
-  /// `Documents/<app>`; null on phones older than Android 10.
+  /// `Documents/ServiceOrders`; null on phones older than Android 10.
   String? _pdfFolder;
 
   /// Language of the loaded profile: the example company is translated, so

@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-/// Public folder on the phone (`Documents/<app name>`) where every saved
+/// Public folder on the phone (`Documents/ServiceOrders`) where every saved
 /// order gets its PDF. The files stay when the app is uninstalled.
 ///
 /// Android only (MainActivity / PdfFolderChannel.kt), Android 10 or newer.
@@ -20,7 +20,7 @@ class PdfFolder {
     }
   }
 
-  /// "Documents/Ordens de Serviço", as shown in the Files app.
+  /// "Documents/ServiceOrders", as shown in the Files app.
   Future<String> folder() async =>
       await _channel.invokeMethod<String>('folder') ?? '';
 
