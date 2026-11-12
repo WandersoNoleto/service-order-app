@@ -25,30 +25,77 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/history.png" alt="History" width="200">
-  <img src="docs/screenshots/form.png" alt="Service order form" width="200">
-  <img src="docs/screenshots/preview.png" alt="PDF preview" width="200">
-  <img src="docs/screenshots/settings.png" alt="Settings" width="200">
+  <img src="docs/hero.webp" alt="Settings, PDF preview and order history of the app" width="860">
 </p>
 
 ## Features
 
-- **Service orders**: customer, service call, parts with live totals and notes, stored on the phone
-  (SQLite). No account, no server, works offline.
-- **History** grouped by day, with totals for today and the month, search by customer or number and
-  quick filters (7 days, this month).
-- **A4 PDF** following a paper template; the parts table continues on the next page when needed.
-- **Share** as PDF or image (WhatsApp), or print.
-- **PDF folder**: every saved order also gets its PDF in `Documents/<app name>` on the phone
+<table>
+  <tr>
+    <td width="240" align="center">
+      <img src="docs/screenshots/form.png" alt="Service order form" width="220">
+    </td>
+    <td valign="middle">
+
+### One-page order form
+
+- Customer, service call, parts with live totals and notes, all inline on a single screen.
+- Stored on the phone (SQLite). No account, no server, works offline.
+- Warns about a duplicated order number before saving.
+
+    </td>
+  </tr>
+  <tr>
+    <td width="240" align="center">
+      <img src="docs/screenshots/preview.png" alt="PDF preview" width="220">
+    </td>
+    <td valign="middle">
+
+### A4 PDF, ready to send
+
+- Follows a paper template; the parts table continues on the next page when needed.
+- Share as PDF or image (WhatsApp), or print.
+- **PDF folder**: every saved order also gets its PDF in `Documents/ServiceOrders` on the phone
   (Android 10+), which stays there if the app is uninstalled.
-- **Backup and restore**: orders, settings and logo in one `.zip`, sent to Drive, WhatsApp or e-mail
-  or saved on the phone. Restoring replaces everything and can be undone right after.
+
+    </td>
+  </tr>
+  <tr>
+    <td width="240" align="center">
+      <img src="docs/screenshots/history.png" alt="Order history" width="220">
+    </td>
+    <td valign="middle">
+
+### History
+
+- Grouped by day, with totals for today and the month.
+- Search by customer, number or service, and quick filters (7 days, this month, warranty).
+
+    </td>
+  </tr>
+  <tr>
+    <td width="240" align="center">
+      <img src="docs/screenshots/settings.png" alt="Settings" width="220">
+    </td>
+    <td valign="middle">
+
+### Settings
+
 - **Company data and logo** editable in the app; only what is filled in is printed on the header.
-- **Portuguese and English**, following the phone or chosen in the app. Regional format (currency,
-  dates, times) is a separate setting, so English with Brazilian reais works, and vice versa.
+- **Backup and restore**: orders, settings and logo in one `.zip`, sent to Drive, WhatsApp or
+  e-mail or saved on the phone. Restoring replaces everything and can be undone right after.
+- **Portuguese and English**, following the phone or chosen in the app. Regional format
+  (currency, dates, times) is a separate setting, so English with Brazilian reais works, and
+  vice versa.
 - **Light and dark themes**, following the phone or chosen in the app.
 - **In-app updates** from GitHub Releases.
-- **White-label**: each client gets its own app id, name, colors, logo, icon and splash.
+
+    </td>
+  </tr>
+</table>
+
+**White-label**: each client gets its own app id, name, colors, logo, icon and splash (see
+[White-label](#white-label-adding-a-client)).
 
 > [!NOTE]
 > Everything stays on the device. Uninstalling the app deletes the service orders, so keep a
