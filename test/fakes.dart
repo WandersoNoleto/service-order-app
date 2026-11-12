@@ -8,6 +8,7 @@ import 'package:service_order_app/core/config/client_config.dart';
 import 'package:service_order_app/core/formatting/region_format.dart';
 import 'package:service_order_app/core/preferences/app_preferences.dart';
 import 'package:service_order_app/core/storage/logo_storage.dart';
+import 'package:service_order_app/core/storage/pdf_folder.dart';
 import 'package:service_order_app/features/backup/backup_service.dart';
 import 'package:service_order_app/features/document/service_order_documents.dart';
 import 'package:service_order_app/features/service_order/data/service_order.dart';
@@ -58,7 +59,44 @@ AppDependencies fakeDependencies({
       region: region,
     ),
     backup: FakeBackupService(),
+    pdfFolder: FakePdfFolder(),
   );
+}
+
+/// Records the files instead of calling MediaStore. New files get
+/// `content://pdf/<n>`; replacing keeps the old address.
+class FakePdfFolder implements PdfFolder {
+  bool supported = true;
+  bool canOpen = true;
+  final saved = <String>[];
+  final deleted = <String>[];
+  var opened = 0;
+
+  @override
+  Future<bool> isSupported() async => supported;
+
+  @override
+  Future<String> folder() async => 'Documents/Teste';
+
+  @override
+  Future<String?> save(
+    String fileName,
+    Uint8List bytes, {
+    String? replacing,
+  }) async {
+    if (!supported) return null;
+    saved.add(fileName);
+    return replacing ?? 'content://pdf/${saved.length}';
+  }
+
+  @override
+  Future<void> delete(String uri) async => deleted.add(uri);
+
+  @override
+  Future<bool> open() async {
+    opened++;
+    return canOpen;
+  }
 }
 
 /// Pretends the user chose an app (or a folder) unless [nextCancelled].
@@ -82,6 +120,26 @@ class FakeBackupService implements BackupService {
 
   @override
   Future<DateTime?> lastBackupAt() async => last;
+
+  /// What "pick" returns (null = cancelled).
+  BackupContents? nextPick;
+  final restored = <BackupContents>[];
+  var undone = 0;
+
+  @override
+  Future<BackupContents?> pick() async => nextPick;
+
+  @override
+  BackupContents read(Uint8List bytes) => throw UnimplementedError();
+
+  @override
+  Future<void> restore(BackupContents backup) async => restored.add(backup);
+
+  @override
+  Future<bool> undoRestore() async {
+    undone++;
+    return true;
+  }
 
   bool _done(String target) {
     if (nextCancelled) return false;
@@ -187,7 +245,19 @@ class FakeServiceOrderRepository implements ServiceOrderRepository {
   }
 
   @override
-  Future<void> setPdfPath(int id, String path) async {}
+  Future<void> setPdfPath(int id, String path) async {
+    final order = _orders[id]!;
+    _orders[id] = ServiceOrder.fromMap(
+      {
+        ...order.toMap(),
+        'id': id,
+        'pdf_path': path,
+        'created_at': order.createdAt!.toIso8601String(),
+        'updated_at': order.updatedAt!.toIso8601String(),
+      },
+      items: order.items,
+    );
+  }
 
   @override
   Future<void> delete(int id) async => _orders.remove(id);
@@ -271,6 +341,9 @@ class FakeLogoStorage implements LogoStorage {
 
   @override
   Future<List<File>> storedFiles() async => [];
+
+  @override
+  Future<void> replaceAll(Map<String, List<int>> files) async {}
 }
 
 /// Returns [nextUpdate] (null = up to date) without calling GitHub.

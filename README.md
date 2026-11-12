@@ -39,6 +39,10 @@
   quick filters (7 days, this month).
 - **A4 PDF** following a paper template; the parts table continues on the next page when needed.
 - **Share** as PDF or image (WhatsApp), or print.
+- **PDF folder**: every saved order also gets its PDF in `Documents/<app name>` on the phone
+  (Android 10+), which stays there if the app is uninstalled.
+- **Backup and restore**: orders, settings and logo in one `.zip`, sent to Drive, WhatsApp or e-mail
+  or saved on the phone. Restoring replaces everything and can be undone right after.
 - **Company data and logo** editable in the app; only what is filled in is printed on the header.
 - **Portuguese and English**, following the phone or chosen in the app. Regional format (currency,
   dates, times) is a separate setting, so English with Brazilian reais works, and vice versa.
@@ -47,7 +51,8 @@
 - **White-label**: each client gets its own app id, name, colors, logo, icon and splash.
 
 > [!NOTE]
-> Everything stays on the device. Uninstalling the app deletes the service orders.
+> Everything stays on the device. Uninstalling the app deletes the service orders, so keep a
+> backup outside the app (Settings → Backup).
 
 ## Getting started
 
@@ -125,7 +130,8 @@ lib/
 ├── features/
 │   ├── service_order/  # form and SQLite repository
 │   ├── history/        # list grouped by day, summary, search and filters
-│   ├── document/       # PDF layout, preview, share and print
+│   ├── backup/         # .zip export and restore
+│   ├── document/       # PDF layout, preview, share, print and the PDF folder
 │   ├── settings/       # company data, logo, language, format and theme
 │   └── update/         # GitHub Releases check and install
 └── l10n/           # Portuguese (template) and English strings

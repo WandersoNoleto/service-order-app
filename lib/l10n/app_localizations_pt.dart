@@ -337,7 +337,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get backupIntro =>
-      'Ordens, configurações e logo em um arquivo .zip. Guarde fora do app para não perder nada se ele for desinstalado.';
+      'O backup não guarda os PDFs. Ele é uma cópia dos dados do app (ordens, configurações e logo) em um arquivo .zip, para voltar ao estado de agora se precisar. Os PDFs são gerados de novo a partir desses dados. Guarde o arquivo fora do app.';
 
   @override
   String get backupShare => 'Enviar (Drive, WhatsApp, e-mail)';
@@ -361,10 +361,85 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get backupRestore => 'Restaurar um backup';
+
+  @override
+  String get backupRestoreHint => 'Substitui os dados atuais';
+
+  @override
+  String get restoreTitle => 'Restaurar este backup?';
+
+  @override
+  String restoreMessage(String date) {
+    return 'Backup de $date. As ordens, configurações e logo atuais serão substituídas.';
+  }
+
+  @override
+  String get restoreConfirm => 'Restaurar';
+
+  @override
+  String get restoreDone => 'Backup restaurado.';
+
+  @override
+  String get restoreUndone => 'Os dados anteriores voltaram.';
+
+  @override
+  String get undo => 'Desfazer';
+
+  @override
+  String get restoreNotABackup => 'Este arquivo não é um backup deste app.';
+
+  @override
+  String get restoreNewerVersion =>
+      'Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo.';
+
+  @override
+  String restoreError(String error) {
+    return 'Não foi possível restaurar o backup:\n$error';
+  }
+
+  @override
   String get recommended => 'Recomendado';
 
   @override
   String get pdfFolder => 'Pasta dos PDFs';
+
+  @override
+  String pdfFolderIntro(String folder) {
+    return 'Cada ordem salva gera um PDF na pasta $folder do celular. Os arquivos continuam lá mesmo se o app for desinstalado.';
+  }
+
+  @override
+  String get pdfFolderUnsupported => 'Disponível no Android 10 ou mais novo';
+
+  @override
+  String get pdfFolderOpen => 'Abrir pasta';
+
+  @override
+  String pdfFolderOpenFailed(String folder) {
+    return 'Abra o app Arquivos e procure a pasta $folder.';
+  }
+
+  @override
+  String get pdfFolderSaveAll => 'Salvar todos os PDFs de novo';
+
+  @override
+  String get pdfFolderSaveAllHint => 'Útil depois de restaurar um backup';
+
+  @override
+  String pdfFolderSaving(String done, String total) {
+    return 'Salvando PDFs… $done de $total';
+  }
+
+  @override
+  String pdfFolderSavedAll(String count) {
+    return 'PDFs salvos na pasta: $count';
+  }
+
+  @override
+  String pdfFolderSaveError(String error) {
+    return 'O PDF não foi salvo na pasta:\n$error';
+  }
 
   @override
   String get updates => 'Atualizações';

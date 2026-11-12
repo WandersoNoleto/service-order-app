@@ -79,16 +79,17 @@ class HistoryPageState extends State<HistoryPage> {
     if (savedId == null) return;
 
     await reload();
-    if (mounted) await _openPreview(savedId);
+    if (mounted) await _openPreview(savedId, justSaved: true);
   }
 
   /// The preview can edit or delete the order, so always reload after it.
-  Future<void> _openPreview(int orderId) async {
+  Future<void> _openPreview(int orderId, {bool justSaved = false}) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => ServiceOrderPreviewPage(
           dependencies: widget.dependencies,
           orderId: orderId,
+          justSaved: justSaved,
         ),
       ),
     );

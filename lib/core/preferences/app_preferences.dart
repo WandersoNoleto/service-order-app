@@ -79,6 +79,15 @@ class AppPreferences extends ChangeNotifier {
     );
   }
 
+  /// Reads the saved values again, after a backup replaced the database.
+  Future<void> reload() async {
+    final saved = await load(_settings);
+    _language = saved._language;
+    _region = saved._region;
+    _theme = saved._theme;
+    notifyListeners();
+  }
+
   LanguagePreference get language => _language;
   RegionPreference get region => _region;
   ThemePreference get theme => _theme;

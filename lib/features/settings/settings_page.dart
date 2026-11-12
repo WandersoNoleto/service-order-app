@@ -7,6 +7,7 @@ import '../../app/brand_widgets.dart';
 import '../../app/coming_soon.dart';
 import '../../core/formatting/region_format.dart';
 import '../../core/preferences/app_preferences.dart';
+import '../backup/backup_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../update/update_checker.dart';
 import '../update/update_prompt.dart';
@@ -27,6 +28,9 @@ class _SettingsPageState extends State<SettingsPage> {
   CompanyProfile? _profile;
   DateTime? _lastBackup;
 
+  /// `Documents/<app>`; null on phones older than Android 10.
+  String? _pdfFolder;
+
   /// Language of the loaded profile: the example company is translated, so
   /// it is reloaded when the language changes.
   Locale? _loadedLocale;
@@ -46,27 +50,164 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _load() async {
     final profile = await _deps.settings.companyProfile(_deps.companyDefaults);
     final lastBackup = await _deps.backup.lastBackupAt();
+    final pdfFolder = await _deps.pdfFolder.isSupported()
+        ? await _deps.pdfFolder.folder()
+        : null;
     if (!mounted) return;
     setState(() {
       _profile = profile;
       _lastBackup = lastBackup;
+      _pdfFolder = pdfFolder;
     });
+  }
+
+  Future<void> _openPdfFolder() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    void tell(String message) =>
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+
+    final folder = _pdfFolder;
+    if (folder == null) return tell(l10n.pdfFolderUnsupported);
+
+    final action = await showDialog<_PdfFolderAction>(
+      context: context,
+      builder: (_) => _OptionDialog(
+        title: l10n.pdfFolder,
+        intro: l10n.pdfFolderIntro(folder),
+        groups: [
+          [
+            (
+              value: _PdfFolderAction.open,
+              icon: Icons.folder_open_outlined,
+              title: l10n.pdfFolderOpen,
+              hint: folder,
+            ),
+            (
+              value: _PdfFolderAction.saveAll,
+              icon: Icons.sync,
+              title: l10n.pdfFolderSaveAll,
+              hint: l10n.pdfFolderSaveAllHint,
+            ),
+          ],
+        ],
+      ),
+    );
+
+    switch (action) {
+      case null:
+        return;
+      case _PdfFolderAction.open:
+        try {
+          if (await _deps.pdfFolder.open()) return;
+        } catch (_) {
+          // Falls back to telling where the folder is.
+        }
+        tell(l10n.pdfFolderOpenFailed(folder));
+      case _PdfFolderAction.saveAll:
+        await _saveAllPdfs();
+    }
+  }
+
+  /// Saves every order's PDF again, with a progress dialog that can't be
+  /// dismissed halfway.
+  Future<void> _saveAllPdfs() async {
+    final l10n = AppLocalizations.of(context);
+    final format = context.format;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final progress = ValueNotifier((done: 0, total: 0));
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: ValueListenableBuilder(
+            valueListenable: progress,
+            builder: (context, value, _) => Row(
+              spacing: 16,
+              children: [
+                const SizedBox.square(
+                  dimension: 24,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                Expanded(
+                  child: Text(
+                    l10n.pdfFolderSaving('${value.done}', '${value.total}'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    String message;
+    try {
+      final count = await _deps.pdfStore.storeAll(
+        company: await _deps.settings.companyProfile(_deps.companyDefaults),
+        l10n: l10n,
+        format: format,
+        onProgress: (done, total) =>
+            progress.value = (done: done, total: total),
+      );
+      message = l10n.pdfFolderSavedAll('$count');
+    } catch (error) {
+      message = l10n.pdfFolderSaveError('$error');
+    }
+    navigator.pop();
+    progress.dispose();
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _backup() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
 
+    // Sharing comes first: it is the only option that also survives
+    // losing the phone.
     final target = await showDialog<_BackupTarget>(
       context: context,
-      builder: (_) => const _BackupDialog(),
+      builder: (_) => _OptionDialog(
+        title: l10n.backup,
+        intro: l10n.backupIntro,
+        groups: [
+          [
+            (
+              value: _BackupTarget.share,
+              icon: Icons.share_outlined,
+              title: l10n.backupShare,
+              hint: l10n.backupShareHint,
+            ),
+            (
+              value: _BackupTarget.device,
+              icon: Icons.save_alt,
+              title: l10n.backupSave,
+              hint: l10n.backupSaveHint,
+            ),
+          ],
+          [
+            (
+              value: _BackupTarget.restore,
+              icon: Icons.settings_backup_restore,
+              title: l10n.backupRestore,
+              hint: l10n.backupRestoreHint,
+            ),
+          ],
+        ],
+      ),
     );
     if (target == null) return;
+    if (target == _BackupTarget.restore) return _restore();
 
     try {
       final done = switch (target) {
         _BackupTarget.share => await _deps.backup.share(),
         _BackupTarget.device => await _deps.backup.saveToDevice(),
+        _BackupTarget.restore => false,
       };
       if (!done) return;
       final lastBackup = await _deps.backup.lastBackupAt();
@@ -87,6 +228,95 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     if (saved ?? false) await _load();
   }
+
+  /// Pick a backup, confirm, replace everything. The snack bar offers to
+  /// undo, from the copy taken just before.
+  Future<void> _restore() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    void tell(String message) =>
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+
+    final BackupContents? backup;
+    try {
+      backup = await _deps.backup.pick();
+    } on BackupException catch (error) {
+      tell(_problemMessage(l10n, error.problem));
+      return;
+    } catch (error) {
+      tell(l10n.restoreError('$error'));
+      return;
+    }
+    if (backup == null || !mounted) return;
+
+    final format = context.format;
+    final createdAt = backup.createdAt;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.restoreTitle),
+        content: Text(
+          l10n.restoreMessage(
+            '${format.date(createdAt)} ${format.timeOf(createdAt)}',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.restoreConfirm),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) return;
+
+    try {
+      await _deps.backup.restore(backup);
+    } catch (error) {
+      tell(l10n.restoreError('$error'));
+      return;
+    }
+    await _reloadAll();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.restoreDone),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(label: l10n.undo, onPressed: _undoRestore),
+      ),
+    );
+  }
+
+  Future<void> _undoRestore() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (!await _deps.backup.undoRestore()) return;
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.restoreError('$error'))),
+      );
+      return;
+    }
+    await _reloadAll();
+    messenger.showSnackBar(SnackBar(content: Text(l10n.restoreUndone)));
+  }
+
+  /// After the database was swapped: language, format and theme may have
+  /// changed too. The history reloads when its tab is opened.
+  Future<void> _reloadAll() async {
+    await _deps.preferences.reload();
+    await _load();
+  }
+
+  static String _problemMessage(AppLocalizations l10n, BackupProblem problem) =>
+      switch (problem) {
+        BackupProblem.notABackup => l10n.restoreNotABackup,
+        BackupProblem.newerVersion => l10n.restoreNewerVersion,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +363,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     _Row(
                       icon: Icons.folder_outlined,
                       title: l10n.pdfFolder,
-                      onTap: () => showComingSoon(context),
+                      subtitle: _pdfFolder ?? l10n.pdfFolderUnsupported,
+                      onTap: _openPdfFolder,
                     ),
                   ],
                 ),
@@ -389,56 +620,53 @@ class _CompanyCard extends StatelessWidget {
   }
 }
 
-enum _BackupTarget { share, device }
+enum _BackupTarget { share, device, restore }
 
-/// Where to send the backup. Sharing comes first: it is the only option
-/// that also survives losing the phone.
-class _BackupDialog extends StatelessWidget {
-  const _BackupDialog();
+enum _PdfFolderAction { open, saveAll }
+
+/// One choice in an [_OptionDialog].
+typedef _Option<T> = ({T value, IconData icon, String title, String hint});
+
+/// Short explanation and a few choices, each with a one-line hint. Groups
+/// are separated by a line (e.g. restoring, apart from exporting).
+class _OptionDialog<T> extends StatelessWidget {
+  const _OptionDialog({
+    required this.title,
+    required this.intro,
+    required this.groups,
+  });
+
+  final String title;
+  final String intro;
+  final List<List<_Option<T>>> groups;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    Widget option(
-      _BackupTarget target,
-      IconData icon,
-      String title,
-      String hint,
-    ) =>
-        ListTile(
-          leading: TintedIcon(icon),
-          title: Text(title),
-          subtitle: Text(hint),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-          onTap: () => Navigator.of(context).pop(target),
-        );
 
     return SimpleDialog(
-      title: Text(l10n.backup),
+      title: Text(title),
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
           child: Text(
-            l10n.backupIntro,
+            intro,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
-        option(
-          _BackupTarget.share,
-          Icons.share_outlined,
-          l10n.backupShare,
-          l10n.backupShareHint,
-        ),
-        option(
-          _BackupTarget.device,
-          Icons.save_alt,
-          l10n.backupSave,
-          l10n.backupSaveHint,
-        ),
+        for (final (index, group) in groups.indexed) ...[
+          if (index > 0) const Divider(),
+          for (final option in group)
+            ListTile(
+              leading: TintedIcon(option.icon),
+              title: Text(option.title),
+              subtitle: Text(option.hint),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+              onTap: () => Navigator.of(context).pop(option.value),
+            ),
+        ],
       ],
     );
   }

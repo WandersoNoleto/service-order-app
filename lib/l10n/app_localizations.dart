@@ -671,7 +671,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupIntro.
   ///
   /// In pt, this message translates to:
-  /// **'Ordens, configurações e logo em um arquivo .zip. Guarde fora do app para não perder nada se ele for desinstalado.'**
+  /// **'O backup não guarda os PDFs. Ele é uma cópia dos dados do app (ordens, configurações e logo) em um arquivo .zip, para voltar ao estado de agora se precisar. Os PDFs são gerados de novo a partir desses dados. Guarde o arquivo fora do app.'**
   String get backupIntro;
 
   /// No description provided for @backupShare.
@@ -710,6 +710,72 @@ abstract class AppLocalizations {
   /// **'Não foi possível criar o backup:\n{error}'**
   String backupError(String error);
 
+  /// No description provided for @backupRestore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Restaurar um backup'**
+  String get backupRestore;
+
+  /// No description provided for @backupRestoreHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substitui os dados atuais'**
+  String get backupRestoreHint;
+
+  /// No description provided for @restoreTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Restaurar este backup?'**
+  String get restoreTitle;
+
+  /// No description provided for @restoreMessage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Backup de {date}. As ordens, configurações e logo atuais serão substituídas.'**
+  String restoreMessage(String date);
+
+  /// No description provided for @restoreConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Restaurar'**
+  String get restoreConfirm;
+
+  /// No description provided for @restoreDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Backup restaurado.'**
+  String get restoreDone;
+
+  /// No description provided for @restoreUndone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os dados anteriores voltaram.'**
+  String get restoreUndone;
+
+  /// No description provided for @undo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get undo;
+
+  /// No description provided for @restoreNotABackup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este arquivo não é um backup deste app.'**
+  String get restoreNotABackup;
+
+  /// No description provided for @restoreNewerVersion.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo.'**
+  String get restoreNewerVersion;
+
+  /// No description provided for @restoreError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível restaurar o backup:\n{error}'**
+  String restoreError(String error);
+
   /// No description provided for @recommended.
   ///
   /// In pt, this message translates to:
@@ -721,6 +787,60 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Pasta dos PDFs'**
   String get pdfFolder;
+
+  /// No description provided for @pdfFolderIntro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada ordem salva gera um PDF na pasta {folder} do celular. Os arquivos continuam lá mesmo se o app for desinstalado.'**
+  String pdfFolderIntro(String folder);
+
+  /// No description provided for @pdfFolderUnsupported.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disponível no Android 10 ou mais novo'**
+  String get pdfFolderUnsupported;
+
+  /// No description provided for @pdfFolderOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir pasta'**
+  String get pdfFolderOpen;
+
+  /// No description provided for @pdfFolderOpenFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abra o app Arquivos e procure a pasta {folder}.'**
+  String pdfFolderOpenFailed(String folder);
+
+  /// No description provided for @pdfFolderSaveAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar todos os PDFs de novo'**
+  String get pdfFolderSaveAll;
+
+  /// No description provided for @pdfFolderSaveAllHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Útil depois de restaurar um backup'**
+  String get pdfFolderSaveAllHint;
+
+  /// No description provided for @pdfFolderSaving.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvando PDFs… {done} de {total}'**
+  String pdfFolderSaving(String done, String total);
+
+  /// No description provided for @pdfFolderSavedAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'PDFs salvos na pasta: {count}'**
+  String pdfFolderSavedAll(String count);
+
+  /// No description provided for @pdfFolderSaveError.
+  ///
+  /// In pt, this message translates to:
+  /// **'O PDF não foi salvo na pasta:\n{error}'**
+  String pdfFolderSaveError(String error);
 
   /// No description provided for @updates.
   ///
